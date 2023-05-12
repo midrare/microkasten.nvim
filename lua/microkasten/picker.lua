@@ -67,7 +67,7 @@ local function gen_entry_maker(opts)
     return display, hls
   end
 
-  local cwd = vim.fn.expand(opts.cwd or vim.loop.cwd())
+  local cwd = vim.fn.expand(opts.cwd or vim.loop.cwd() or '.')
 
   local key_to_gen = {
     filename = function(e)
