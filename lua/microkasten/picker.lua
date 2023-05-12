@@ -3,7 +3,7 @@ local moduleroot = (modulename or 'microkasten.x'):gsub('(.+)%..+', '%1')
 
 local os = require('os')
 
-local paths = require(moduleroot .. '.path')
+local paths = require(moduleroot .. '.luamisc.path')
 local state = require(moduleroot .. '.state')
 local util = require(moduleroot .. '.util')
 

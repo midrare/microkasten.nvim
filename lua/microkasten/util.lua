@@ -3,8 +3,8 @@ local moduleroot = modulename:gsub('(.+)%..+', '%1')
 
 local os = require('os')
 
-local date = require((moduleroot or 'microkasten') .. '.date')
-local paths = require((moduleroot or 'microkasten') .. '.path')
+local date = require((moduleroot or 'microkasten') .. '.luamisc.date')
+local paths = require((moduleroot or 'microkasten') .. '.luamisc.paths')
 
 local M = {}
 

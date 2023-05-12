@@ -1,7 +1,7 @@
 local modulename, _ = ...
 local os = require('os')
 
-local paths = require((modulename or 'microkasten') .. '.path')
+local paths = require((modulename or 'microkasten') .. '.luamisc.paths')
 local picker = require((modulename or 'microkasten') .. '.picker')
 local state = require((modulename or 'microkasten') .. '.state')
 local util = require((modulename or 'microkasten') .. '.util')
