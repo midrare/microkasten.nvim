@@ -1,7 +1,5 @@
 local modulename, _ = ...
-local moduleroot = (modulename or 'microkasten.x'):gsub('(.+)%..+', '%1')
-
-local os = require('os')
+local moduleroot = modulename:gsub('(.+)%..+', '%1')
 
 local paths = require(moduleroot .. '.luamisc.path')
 local state = require(moduleroot .. '.state')

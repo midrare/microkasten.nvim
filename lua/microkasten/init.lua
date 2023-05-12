@@ -1,10 +1,10 @@
-local modulename, _ = ...
-local os = require('os')
+local module, _ = {}, nil
+module.name, _ = ...
 
-local paths = require((modulename or 'microkasten') .. '.luamisc.paths')
-local picker = require((modulename or 'microkasten') .. '.picker')
-local state = require((modulename or 'microkasten') .. '.state')
-local util = require((modulename or 'microkasten') .. '.util')
+local paths = require((module.name or 'microkasten') .. '.luamisc.paths')
+local picker = require((module.name or 'microkasten') .. '.picker')
+local state = require((module.name or 'microkasten') .. '.state')
+local util = require((module.name or 'microkasten') .. '.util')
 
 local file_extensions = { '.md', '.norg' }
 
@@ -217,9 +217,7 @@ local action_to_callback = {
   end,
 }
 
-local M = {}
-
-function M.setup(opts)
+function module.setup(opts)
   opts = opts or {}
 
   state.file_extensions = opts.file_extensions or file_extensions
@@ -262,7 +260,7 @@ function M.setup(opts)
   vim.cmd('augroup END')
 end
 
-function M.open_link_at_cursor(dir, pick_win)
+function module.open_link_at_cursor(dir, pick_win)
   if not dir then
     dir = vim.fn.expand('%:p:h')
   end
@@ -272,16 +270,16 @@ function M.open_link_at_cursor(dir, pick_win)
   end
 end
 
-function M.open_note(uid, dir, pick_win)
+function module.open_note(uid, dir, pick_win)
   open_note_in_dir(uid, dir, pick_win)
 end
 
-function M.open_filename_finder(action)
+function module.open_filename_finder(action)
   action = action or 'open'
   picker.open_filename_picker(vim.fn.getcwd(-1, -1), action_to_callback[action])
 end
 
-function M.open_live_grep_finder(action)
+function module.open_live_grep_finder(action)
   action = action or 'open'
   picker.open_live_grep_picker(
     vim.fn.getcwd(-1, -1),
@@ -289,7 +287,7 @@ function M.open_live_grep_finder(action)
   )
 end
 
-function M.open_backlink_finder(action)
+function module.open_backlink_finder(action)
   action = action or 'open'
   local uid = get_current_uid()
   if uid and uid ~= '' then
@@ -301,27 +299,27 @@ function M.open_backlink_finder(action)
   end
 end
 
-function M.parse_uid(filename)
+function module.parse_uid(filename)
   return util.parse_uid(filename)
 end
 
-function M.get_current_uid()
+function module.get_current_uid()
   return get_current_uid()
 end
 
-function M.parse_link_at(row, col)
+function module.parse_link_at(row, col)
   return parse_link_at(row, col)
 end
 
-function M.parse_link_at_cursor()
+function module.parse_link_at_cursor()
   return parse_link_at_cursor()
 end
 
-function M.create_note_at(dir, title, file_ext)
+function module.create_note_at(dir, title, file_ext)
   create_note_at(dir, title, file_ext)
 end
 
-function M.create_note()
+function module.create_note()
   vim.ui.input({ prompt = 'Note title: ', default = '' }, function(title)
     title = (title or ''):gsub('^%s*', ''):gsub('%s*$', '')
     if title and #title > 0 then
@@ -330,11 +328,11 @@ function M.create_note()
   end)
 end
 
-function M.retitle_note_at(filepath, title)
+function module.retitle_note_at(filepath, title)
   retitle_note_at(filepath, title)
 end
 
-function M.retitle_current_note()
+function module.retitle_current_note()
   local filepath = vim.fn.expand('%:p')
   if filepath and #filepath > 0 then
     vim.ui.input({ prompt = 'Rename note: ', default = '' }, function(title)
@@ -346,8 +344,8 @@ function M.retitle_current_note()
   end
 end
 
-function M.generate_uid()
+function module.generate_uid()
   return util.generate_uid()
 end
 
-return M
+return module
