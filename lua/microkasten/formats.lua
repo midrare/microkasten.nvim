@@ -96,15 +96,18 @@ end
 ---@return string[] exts file extensions
 function M.exts()
   local exts = tables.flattened({ useropts.exts })
+  arrays.transform(exts, paths.canonical_ext)
+  arrays.uniqify(exts)
+
+  if #exts <= 0 then
+    exts = { ".md", ".norg" }
+  end
+
   table.insert(exts, useropts.default_ext)
   arrays.transform(exts, paths.canonical_ext)
   arrays.uniqify(exts)
 
-  if #exts > 0 then
-    return exts
-  end
-
-  return { ".md", ".norg" }
+  return exts
 end
 
 ---@return string ext default file extension
