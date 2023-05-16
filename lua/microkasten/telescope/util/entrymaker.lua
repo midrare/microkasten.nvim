@@ -1,7 +1,7 @@
 local M = {}
 
 local paths = require("microkasten.luamisc.paths")
-local usermisc = require("microkasten.usermisc")
+local useropts = require("microkasten.useropts")
 
 local tsutils = require("telescope.utils")
 
@@ -40,7 +40,7 @@ local function filename_attrs(opts)
       return e._info.title
     end,
     _info = function(e)
-      local f = usermisc.parse_filename
+      local f = useropts.parse_filename
       return f(e.filename)
     end,
     path = function(e)
@@ -170,7 +170,7 @@ local function grep_attrs(opts)
       return e._info.title
     end,
     _info = function(e)
-      local f = usermisc.parse_filename
+      local f = useropts.parse_filename
       return f(e.filename)
     end,
   }

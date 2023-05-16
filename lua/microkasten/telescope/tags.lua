@@ -3,7 +3,7 @@ local M = {}
 local arrays = require("microkasten.luamisc.arrays")
 local makecmd = require("microkasten.telescope.util.makecmd")
 local entrymaker = require("microkasten.telescope.util.entrymaker")
-local usermisc = require("microkasten.usermisc")
+local useropts = require("microkasten.useropts")
 
 local tsconfig = require("telescope.config").values
 local tsfinders = require("telescope.finders")
@@ -34,7 +34,7 @@ function M.open(opts)
 
   opts.prompt = nil
 
-  local patterns = vim.tbl_flatten({usermisc.tags_regex()})
+  local patterns = vim.tbl_flatten({useropts.tags_regex()})
   for _, pat in ipairs(patterns) do
     table.insert(opts.additional_args, "-e")
     table.insert(opts.additional_args, pat)
@@ -54,7 +54,7 @@ function M.open(opts)
       prompt_title = opts.title or "Search tags",
       finder = find_job,
       sorter = tsconfig.generic_sorter(opts),
-      attach_mappings = usermisc.telescope_mappings,
+      attach_mappings = useropts.telescope_mappings,
     })
     :find()
 end

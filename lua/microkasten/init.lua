@@ -4,7 +4,7 @@ local files = require('microkasten.luamisc.files')
 local paths = require('microkasten.luamisc.paths')
 local tables = require('microkasten.luamisc.tables')
 
-local usermisc = require('microkasten.usermisc')
+local useropts = require('microkasten.useropts')
 local util = require('microkasten.util')
 
 
@@ -24,8 +24,8 @@ end
 
 
 function _MICROKASTEN.on_attach()
-  usermisc.apply_syntax()
-  _MICROKASTEN._run_hook(usermisc.on_attach)
+  useropts.apply_syntax()
+  _MICROKASTEN._run_hook(useropts.on_attach)
 end
 
 
@@ -34,7 +34,7 @@ local function init_autocmds()
   vim.cmd('autocmd!')
 
   local pats = {}
-  local exts = usermisc.exts or { '.norg', '.md' }
+  local exts = useropts.exts or { '.norg', '.md' }
   for _, ext in ipairs(exts) do
     ext = ext:gsub('^[%.%s]+', ''):gsub('%s+$', '')
     if ext and #ext > 0 then
@@ -61,8 +61,8 @@ end
 function M.setup(opts)
   opts = opts or {}
 
-  tables.overwrite({}, usermisc)
-  tables.merge(opts, usermisc)
+  tables.overwrite({}, useropts)
+  tables.merge(opts, useropts)
 
   init_autocmds()  -- TODO: make autocmds configurable
 end
@@ -115,7 +115,7 @@ function M.open_uid(dir, uid, pick_win)
   if not dir then
     return
   end
-  local find_uid_in_dir = usermisc.find_uid_in_dir
+  local find_uid_in_dir = useropts.find_uid_in_dir
   local target = find_uid_in_dir(dir, uid)
   if not target or #target <= 0 then
     return
@@ -142,11 +142,11 @@ end
 ---@param pos? cursor cursor pos
 ---@return notelink? link link info if link exists
 function M.parse_link_at(pos)
-  local link = util.get_link_at(pos, usermisc.link_pat)
+  local link = util.get_link_at(pos, useropts.link_pat)
   if not link then
     return nil
   end
-  local parse = usermisc.parse_link
+  local parse = useropts.parse_link
   return parse(link)
 end
 
@@ -179,7 +179,7 @@ function M.parse_filename(filename)
     return nil
   end
 
-  local parse_filename = usermisc.parse_filename
+  local parse_filename = useropts.parse_filename
   return parse_filename(filename)
 end
 
@@ -210,15 +210,15 @@ function M.create(dir, title, ext)
     return
   end
 
-  ext = (ext and ext:lower()) or usermisc.default_ext or usermisc.exts[1] or nil
+  ext = (ext and ext:lower()) or useropts.default_ext or useropts.exts[1] or nil
   ext = (ext and ext:gsub('^%.+', '')) or nil
   if not ext then
     return
   end
 
-  local generate_uid = usermisc.generate_uid
-  local generate_filename = usermisc.generate_filename
-  local generate_note = usermisc.generate_note
+  local generate_uid = useropts.generate_uid
+  local generate_filename = useropts.generate_filename
+  local generate_note = useropts.generate_note
 
   local info = { uid = generate_uid(), title = title, ext = ext }
   local basename = generate_filename(info)
@@ -248,7 +248,7 @@ function M.rename(filename, title)
     return
   end
 
-  local parse_filename = usermisc.parse_filename
+  local parse_filename = useropts.parse_filename
   local info = parse_filename(filename)
   if not title or #title <= 0 then
     vim.ui.input({ prompt = 'Rename note: ', default = '' }, function(s)
@@ -264,7 +264,7 @@ function M.rename(filename, title)
 
   info.title = title
 
-  local generate_filename = usermisc.generate_filename
+  local generate_filename = useropts.generate_filename
   local new_filename = generate_filename(info)
 
   vim.fn.mkdir(paths.dirname(new_filename), 'p')
@@ -274,7 +274,7 @@ end
 
 ---@return string uid generated uid
 function M.generate_uid()
-  local generate = usermisc.generate_uid
+  local generate = useropts.generate_uid
   return generate()
 end
 
