@@ -48,16 +48,15 @@ local function filename_attrs(opts)
     display = function(e)
       local segs = {}
 
-      local icon, icon_hl =
-        tsutils.get_devicons(e.filename, opts.disable_devicons)
+      local icon, icon_hl = tsutils.get_devicons(e.filename, opts.disable_devicons)
       if icon and icon_hl then
-        table.insert(segs, {icon, icon_hl})
-        table.insert(segs, {' ', nil})
+        table.insert(segs, { icon, icon_hl })
+        table.insert(segs, { " ", nil })
       end
 
       if not opts.disable_uid and e.uid and #e.uid > 0 then
-        table.insert(segs, { e.uid, 'Comment' })
-        table.insert(segs, {' ', nil})
+        table.insert(segs, { e.uid, "Comment" })
+        table.insert(segs, { " ", nil })
       end
 
       table.insert(segs, { e.title, nil })
@@ -73,8 +72,7 @@ local function grep_attrs(opts)
       local text = e.value
 
       ---@diagnostic disable-next-line: redefined-local
-      local start, stop, filename, lnum, col =
-        text:find("^(.*):([0-9]+):([0-9]+):")
+      local start, stop, filename, lnum, col = text:find("^(.*):([0-9]+):([0-9]+):")
       if not start or not stop then
         start, stop, lnum, col = text:find("^([0-9]+):([0-9]+):")
       end
@@ -108,19 +106,19 @@ local function grep_attrs(opts)
       if not opts.disable_devicons and e.icon then
         local ico, ico_hl = table.unpack(e._devicon)
         if ico and #ico > 0 then
-          table.insert(segs, {ico, ico_hl})
-          table.insert(segs, {' ', nil})
+          table.insert(segs, { ico, ico_hl })
+          table.insert(segs, { " ", nil })
         end
       end
 
       if not opts.disable_filename then
         local filename = tsutils.transform_path(opts, e.filename)
-        table.insert(segs, { filename .. ':', 'Comment'})
+        table.insert(segs, { filename .. ":", "Comment" })
       end
       if not opts.disable_coordinates and e._parsed.lnum then
-        table.insert(segs, { e._parsed.lnum .. ':', 'Comment' })
+        table.insert(segs, { e._parsed.lnum .. ":", "Comment" })
         if e._parsed.col then
-          table.insert(segs, { e._parsed.col .. ':', 'Comment' })
+          table.insert(segs, { e._parsed.col .. ":", "Comment" })
         end
       end
       if not opts.disable_text and e._parsed.text then
@@ -209,7 +207,7 @@ function M.tag_entry_maker(opts)
     local segs = {}
 
     if not opts.disable_devicons then
-      table.insert(segs, {"󰓹 ", nil })
+      table.insert(segs, { "󰓹 ", nil })
     end
 
     table.insert(segs, { e.value, nil })

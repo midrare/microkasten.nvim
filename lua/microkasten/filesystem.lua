@@ -20,32 +20,32 @@ end
 ---@param prefix string? include only if start of filename matches
 ---@return string[] filenames filenames in dir
 M.list_dir = function(dir, prefix)
-  prefix = (prefix and prefix:gsub('[^a-zA-Z0-9_%-:# %.]', '')) or nil
+  prefix = (prefix and prefix:gsub("[^a-zA-Z0-9_%-:# %.]", "")) or nil
   local filenames = {}
 
-  local cmd = ''
-  if vim.fn.has('win32') > 0 then
-    local p = dir:gsub('[\\/]+', '\\')
+  local cmd = ""
+  if vim.fn.has("win32") > 0 then
+    local p = dir:gsub("[\\/]+", "\\")
     if prefix and #prefix > 0 then
-      p = p .. '\\' .. prefix .. '*'
+      p = p .. "\\" .. prefix .. "*"
     end
     -- do /not/ escape backslashes if you want dir command to work
     cmd = 'dir /B "' .. vim.fn.escape(p, '"') .. '" 2>nul'
   else
-    local p = dir:gsub('[\\/]+', '/')
+    local p = dir:gsub("[\\/]+", "/")
     if prefix and #prefix > 0 then
-      p = p .. '/' .. prefix
+      p = p .. "/" .. prefix
     end
     cmd = 'ls -A -1 "' .. vim.fn.escape(p, '"') .. '"* 2>/dev/null'
   end
 
   local status_ok, pipe = pcall(io.popen, cmd)
   if status_ok and pipe ~= nil then
-    local output = pipe:read('*a')
+    local output = pipe:read("*a")
     pipe:close()
 
-    for line in string.gmatch(output .. '\n', '([^\n]*)\n') do
-      line = line:gsub('^%s*', ''):gsub('%s*$', '')
+    for line in string.gmatch(output .. "\n", "([^\n]*)\n") do
+      line = line:gsub("^%s*", ""):gsub("%s*$", "")
       if #line > 0 then
         table.insert(filenames, line)
       end
@@ -54,6 +54,5 @@ M.list_dir = function(dir, prefix)
 
   return filenames
 end
-
 
 return M

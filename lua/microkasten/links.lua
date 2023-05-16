@@ -15,26 +15,24 @@ local function find_pat_at(pat, s, idx)
   return nil
 end
 
-
-
 ---@param link string
 ---@return notelink link
 function M.parse_link(link)
-  link = link:gsub('^%[%[', '') :gsub('%]%]$', '')
+  link = link:gsub("^%[%[", ""):gsub("%]%]$", "")
 
-  local start, stop, title = link:find('|%s*(.+)$')
+  local start, stop, title = link:find("|%s*(.+)$")
   if start and stop then
     link = link:sub(1, start - 1) .. link:sub(stop + 1)
   end
 
   ---@diagnostic disable-next-line: redefined-local
-  local start, stop, prefix = link:find('^(.+)%s*:%s*')
+  local start, stop, prefix = link:find("^(.+)%s*:%s*")
   if start and stop then
     link = link:sub(1, start - 1) .. link:sub(stop + 1)
   end
 
   ---@diagnostic disable-next-line: redefined-local, unused-local
-  link = link:gsub('^%s+', ''):gsub('%s+$', '')
+  link = link:gsub("^%s+", ""):gsub("%s+$", "")
   local uid = link and #link > 0 and link or nil
   return { uid = uid, title = title, prefix = prefix }
 end
@@ -49,9 +47,9 @@ end
 ---@param pos? cursor cursor pos
 ---@return string? link link string
 function M.get_link_at(pos, pat)
-  pat = pat or '%[%[..*%]%]'
+  pat = pat or "%[%[..*%]%]"
   if not pos then
-    local o = vim.fn.getpos('.')
+    local o = vim.fn.getpos(".")
     pos = { row = o[2], col = o[3] }
   end
 
@@ -62,6 +60,5 @@ function M.get_link_at(pos, pat)
 
   return find_pat_at(pat, line, pos.col)
 end
-
 
 return M

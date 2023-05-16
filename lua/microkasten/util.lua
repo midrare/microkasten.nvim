@@ -1,8 +1,7 @@
 local M = {}
 
-local date = require('microkasten.luamisc.date')
-local paths = require('microkasten.luamisc.paths')
-
+local date = require("microkasten.luamisc.date")
+local paths = require("microkasten.luamisc.paths")
 
 function M.rename_bufs(src_fn, target_fn, cwd)
   local note_bufnr = vim.fn.bufnr(src_fn)
@@ -32,7 +31,7 @@ function M.rename_bufs(src_fn, target_fn, cwd)
     if orig_winid >= 0 then
       for _, winid in ipairs(vim.fn.win_findbuf(note_bufnr)) do
         vim.api.nvim_set_current_win(winid)
-        vim.cmd('silent! write!')
+        vim.cmd("silent! write!")
       end
       vim.api.nvim_set_current_win(orig_winid)
     end
@@ -43,22 +42,22 @@ end
 ---@param pick_win? boolean true to ask user for window
 M.open_in_window = function(filename, pick_win)
   if pick_win then
-    local winnr = require('window-picker').pick_window({
+    local winnr = require("window-picker").pick_window({
       include_current_win = true,
-      selection_chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',
+      selection_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
     })
     if winnr and winnr > 0 then
       vim.api.nvim_set_current_win(winnr)
-      vim.cmd('silent! edit! ' .. vim.fn.escape(filename, ' '))
+      vim.cmd("silent! edit! " .. vim.fn.escape(filename, " "))
     end
   else
-    vim.cmd('silent! edit ' .. vim.fn.escape(filename, ' '))
+    vim.cmd("silent! edit " .. vim.fn.escape(filename, " "))
   end
 end
 
 ---@return string timestamp timestamp for note metadata
 function M.generate_timestamp()
-  local datetime_pat = '%Y/%m/%d %I:%M %p %Z'
+  local datetime_pat = "%Y/%m/%d %I:%M %p %Z"
   local dt = date(true)
   return dt:fmt(datetime_pat)
 end
@@ -66,7 +65,7 @@ end
 local _last_uid = nil
 ---@return string uid generated uid
 function M.generate_uid()
-  local pat = '%Y%m%d%H%M'
+  local pat = "%Y%m%d%H%M"
   local dt = date(true)
   local uid = dt:fmt(pat)
 

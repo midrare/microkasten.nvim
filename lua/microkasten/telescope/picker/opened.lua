@@ -1,6 +1,6 @@
 local M = {}
 
-local paths = require('microkasten.luamisc.paths')
+local paths = require("microkasten.luamisc.paths")
 
 M.get_open_filelist = function(cwd)
   local bufnrs = vim.tbl_filter(function(b)

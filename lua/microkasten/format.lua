@@ -2,20 +2,18 @@ local M = {}
 
 local util = require("microkasten.util")
 
-
 local function clean_tags(tags)
   local cleaned = {}
   for _, tag in ipairs(tags) do
-    tag = tag:gsub('^#', '')
-    tag = tag:gsub('[^a-zA-Z0-9_%-%.]', '')
-    if tag and #tag > 0 and not tag:match('^%s*$') then
-      tag = '#' .. tag
+    tag = tag:gsub("^#", "")
+    tag = tag:gsub("[^a-zA-Z0-9_%-%.]", "")
+    if tag and #tag > 0 and not tag:match("^%s*$") then
+      tag = "#" .. tag
       table.insert(cleaned, tag)
     end
   end
   return tags
 end
-
 
 ---@param note noteinfo note info
 ---@return string? note plain text note contents
@@ -25,24 +23,24 @@ function M.generate_note_md(note)
 
   local lines = {}
   if note.title then
-    table.insert(lines, 'title: ' .. note.title)
+    table.insert(lines, "title: " .. note.title)
   end
   if note.uid then
-    table.insert(lines, 'uid: ' .. note.uid)
+    table.insert(lines, "uid: " .. note.uid)
   end
   if tags and #tags > 0 then
-    table.insert(lines, 'tags: ' .. table.concat(tags, ', '))
+    table.insert(lines, "tags: " .. table.concat(tags, ", "))
   end
-  table.insert(lines, 'created: ' .. created)
+  table.insert(lines, "created: " .. created)
 
   if lines and #lines > 0 then
-    table.insert(lines, 1, '---')
-    table.insert(lines, '---')
-    table.insert(lines, '')
-    table.insert(lines, '')
+    table.insert(lines, 1, "---")
+    table.insert(lines, "---")
+    table.insert(lines, "")
+    table.insert(lines, "")
   end
 
-  return table.concat(lines, '\n')
+  return table.concat(lines, "\n")
 end
 
 ---@param note noteinfo note info
@@ -53,26 +51,25 @@ function M.generate_note_norg(note)
 
   local lines = {}
   if note.title then
-    table.insert(lines, 'title: ' .. note.title)
+    table.insert(lines, "title: " .. note.title)
   end
   if note.uid then
-    table.insert(lines, 'uid: ' .. note.uid)
+    table.insert(lines, "uid: " .. note.uid)
   end
   if tags and #tags > 0 then
-    table.insert(lines, 'tags: [ ' .. table.concat(tags, ', ') .. ' ]')
+    table.insert(lines, "tags: [ " .. table.concat(tags, ", ") .. " ]")
   end
-  table.insert(lines, 'created: ' .. created)
+  table.insert(lines, "created: " .. created)
 
   if lines and #lines > 0 then
-    table.insert(lines, 1, '@document.meta')
-    table.insert(lines, '@end')
-    table.insert(lines, '')
-    table.insert(lines, '')
+    table.insert(lines, 1, "@document.meta")
+    table.insert(lines, "@end")
+    table.insert(lines, "")
+    table.insert(lines, "")
   end
 
-  return table.concat(lines, '\n')
+  return table.concat(lines, "\n")
 end
-
 
 ---@param note noteinfo note info
 ---@return string? note plain text note contents
@@ -82,8 +79,8 @@ function M.generate_note(note)
     norg = M.generate_note_norg,
   }
 
-  local ext = note.ext or '.md'
-  ext = ext:gsub('^%.+', ''):lower()
+  local ext = note.ext or ".md"
+  ext = ext:gsub("^%.+", ""):lower()
   if not ext or #ext <= 0 then
     return nil
   end
@@ -98,12 +95,12 @@ end
 
 ---@return string[] exts file extensions
 function M.exts()
-  return { '.md', '.norg' }
+  return { ".md", ".norg" }
 end
 
 ---@return string ext default file extension
 function M.default_ext()
-  return '.md'
+  return ".md"
 end
 
 return M

@@ -14,13 +14,12 @@ local function add_flag(cmd, flag, is_enabled)
   end
 end
 
-
 local function add_value(cmd, flag, value)
   if type(value) == "table" then
     for _, val in ipairs(value) do
       add_value(cmd, flag, add_value(val))
     end
-  elseif (value) == "function" then
+  elseif value == "function" then
     add_value(cmd, flag, value())
   elseif value ~= nil then
     table.insert(cmd, flag)
@@ -65,8 +64,8 @@ function M.make_grep_cmd(opts)
   return vim.tbl_flatten({
     grep_cmd,
     additional_args,
-    '--color=never',
-    '--no-heading',
+    "--color=never",
+    "--no-heading",
     "--",
     opts.prompt,
     search_list,
@@ -93,12 +92,11 @@ function M.make_listdir_cmd(opts)
   }
 end
 
-
 function M.make_fd_cmd(opts)
   opts = (opts and vim.tbl_deep_extend("force", {}, opts)) or {}
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
   opts.additional_args = opts.additional_args or {}
-  local cmd = { 'fd' }
+  local cmd = { "fd" }
 
   if opts.ignore == nil then
     opts.ignore = true
@@ -110,18 +108,18 @@ function M.make_fd_cmd(opts)
 
   table.insert(cmd, opts.additional_args or {})
 
-  add_flag(cmd, '--hidden', opts.hidden)
-  add_flag(cmd, '--no-ignore', opts.ignore)
-  add_flag(cmd, '--follow', opts.follow)
+  add_flag(cmd, "--hidden", opts.hidden)
+  add_flag(cmd, "--no-ignore", opts.ignore)
+  add_flag(cmd, "--follow", opts.follow)
 
-  add_value(cmd, '--search-path', opts.search_dirs)
-  add_value(cmd, '--exclude', opts.exclude)
+  add_value(cmd, "--search-path", opts.search_dirs)
+  add_value(cmd, "--exclude", opts.exclude)
   add_value(cmd, "--extension", opts.ext_filter)
 
   return vim.tbl_flatten({
     cmd,
-    '--color=never',
-    '--',
+    "--color=never",
+    "--",
     opts.prompt,
   })
 end

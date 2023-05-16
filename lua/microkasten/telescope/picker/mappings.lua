@@ -1,6 +1,6 @@
 local M = {}
 
-local actions = require('microkasten.telescope.picker.actions')
+local actions = require("microkasten.telescope.picker.actions")
 local tsactions = require("telescope.actions")
 
 function M.telescope_mappings(_, map)

@@ -1,12 +1,11 @@
 local M = {}
 
 local tsmt = require("telescope.actions.mt")
-local tsactions = require('telescope.actions')
-local tsstate = require('telescope.actions.state')
+local tsactions = require("telescope.actions")
+local tsstate = require("telescope.actions.state")
 
 local winpicker_ok, winpicker = pcall(require, "window-picker")
 winpicker = winpicker_ok and winpicker or nil
-
 
 function M.put_uid(prompt_bufnr)
   local picker = tsstate.get_current_picker(prompt_bufnr)
@@ -29,7 +28,7 @@ end
 function M.yank_uid(prompt_bufnr)
   local picker = tsstate.get_current_picker(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
-  local reg = vim.api.nvim_get_vvar('register') or '"'
+  local reg = vim.api.nvim_get_vvar("register") or '"'
   tsactions.close(prompt_bufnr)
   vim.fn.setreg(reg, entry.uid)
 end
@@ -37,7 +36,7 @@ end
 function M.yank_path(prompt_bufnr)
   local picker = tsstate.get_current_picker(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
-  local reg = vim.api.nvim_get_vvar('register') or '"'
+  local reg = vim.api.nvim_get_vvar("register") or '"'
   tsactions.close(prompt_bufnr)
   vim.fn.setreg(reg, entry.path)
 end
@@ -69,6 +68,5 @@ function M.close(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
   tsactions.close(prompt_bufnr)
 end
-
 
 return tsmt.transform_mod(M)
