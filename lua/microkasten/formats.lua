@@ -1,6 +1,7 @@
 local M = {}
 
 local arrays = require("microkasten.luamisc.arrays")
+local paths = require("microkasten.luamisc.paths")
 local tables = require("microkasten.luamisc.tables")
 local useropts = require("microkasten.useropts")
 local util = require("microkasten.util")
@@ -18,13 +19,10 @@ local function clean_tags(tags)
   return tags
 end
 
-local function clean_ext(ext)
-  return "." .. ext:gsub("^[%s%.]+", ""):gsub("%s+$", ""):lower()
-end
 
 ---@param note noteinfo note info
 ---@return string? note plain text note contents
-function M.generate_note_md(note)
+local function generate_markdown(note)
   local tags = clean_tags(note.tags)
   local created = util.generate_timestamp()
 
@@ -52,7 +50,7 @@ end
 
 ---@param note noteinfo note info
 ---@return string? note plain text note contents
-function M.generate_note_norg(note)
+local function generate_neorg(note)
   local tags = clean_tags(note.tags)
   local created = util.generate_timestamp()
 
@@ -82,14 +80,22 @@ end
 ---@return string? note plain text note contents
 function M.generate_note(note)
   local ext_to_gen = {
-    md = M.generate_note_md,
-    norg = M.generate_note_norg,
+    md = generate_markdown,
+    norg = generate_neorg,
   }
 
-  local ext = note.ext or ".md"
-  ext = ext:gsub("^%.+", ""):lower()
-  if not ext or #ext <= 0 then
+  local ext = paths.canonical_ext(note.ext) or M.default_ext()
+  if not ext then
     return nil
+  end
+
+  if type((useropts.formats or {}).generate) == "function" then
+    return useropts.formats.generate(note)
+  elseif
+    type((useropts.formats or {}).generate) == "table"
+    and useropts.formats[ext]
+  then
+    return useropts.formats[ext](note)
   end
 
   if not ext_to_gen[ext] then
@@ -104,7 +110,7 @@ end
 function M.exts()
   local exts = tables.flattened({ useropts.exts })
   table.insert(exts, useropts.default_ext)
-  arrays.transform(exts, clean_ext)
+  arrays.transform(exts, paths.canonical_ext)
   arrays.uniqify(exts)
 
   if #exts > 0 then
@@ -117,7 +123,7 @@ end
 ---@return string ext default file extension
 function M.default_ext()
   if useropts.default_ext then
-    local ext = clean_ext(useropts.default_ext)
+    local ext = paths.canonical_ext(useropts.default_ext)
     if ext and #ext > 0 then
       return ext
     end
@@ -128,7 +134,7 @@ function M.default_ext()
     return exts[1]
   end
 
-  return '.md'
+  return ".md"
 end
 
 return M

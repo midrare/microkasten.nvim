@@ -12,4 +12,14 @@ M.exts = {}
 ---@type string?
 M.default_ext = nil
 
+M.formats = {}
+
+M.parse_filename = nil
+M.generate_filename = nil
+
+M.links = {
+  regex = nil,
+  luapat = nil,
+}
+
 return M

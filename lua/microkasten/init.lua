@@ -4,7 +4,7 @@ local files = require("microkasten.luamisc.files")
 local paths = require("microkasten.luamisc.paths")
 local tables = require("microkasten.luamisc.tables")
 
-local format = require("microkasten.format")
+local formats = require("microkasten.formats")
 local filesystem = require("microkasten.filesystem")
 local links = require("microkasten.links")
 local filenames = require("microkasten.filenames")
@@ -35,7 +35,7 @@ local function init_autocmds()
   vim.cmd("autocmd!")
 
   local pats = {}
-  for _, ext in ipairs(format.exts()) do
+  for _, ext in ipairs(formats.exts()) do
     ext = ext:gsub("^[%.%s]+", ""):gsub("%s+$", "")
     if ext and #ext > 0 then
       table.insert(pats, "*." .. ext)
@@ -202,7 +202,7 @@ function M.create(dir, title, ext)
     return
   end
 
-  ext = (ext and ext:lower()) or format.default_ext()
+  ext = (ext and ext:lower()) or formats.default_ext()
   ext = (ext and ext:gsub("^%.+", "")) or nil
   if not ext then
     return
@@ -211,7 +211,7 @@ function M.create(dir, title, ext)
   local info = { uid = util.generate_uid(), title = title, ext = ext }
   local basename = filenames.generate_filename(info)
   local filename = dir .. paths.sep() .. basename
-  local content = format.generate_note(info)
+  local content = formats.generate_note(info)
 
   files.makedirs(dir)
   if content and #content > 0 then
