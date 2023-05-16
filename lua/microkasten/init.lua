@@ -1,351 +1,281 @@
-local module, _ = {}, nil
-module.name, _ = ...
+local M = {}
 
-local paths = require((module.name or 'microkasten') .. '.luamisc.paths')
-local picker = require((module.name or 'microkasten') .. '.picker')
-local state = require((module.name or 'microkasten') .. '.state')
-local util = require((module.name or 'microkasten') .. '.util')
+local files = require('microkasten.luamisc.files')
+local paths = require('microkasten.luamisc.paths')
+local tables = require('microkasten.luamisc.tables')
 
-local file_extensions = { '.md', '.norg' }
+local usermisc = require('microkasten.usermisc')
+local util = require('microkasten.util')
 
-local function get_current_uid()
-  local uid = vim.fn.expand('%:p:t')
-  return (uid and util.parse_uid(uid)) or nil
-end
 
-local function parse_link_at(row, col)
-  local line = vim.fn.getline(row)
-  local contents = nil
+_MICROKASTEN = {}
 
-  local i = 1
-  while i <= #line do
-    local start, stop = line:find(util.link_pattern, i)
-    if not start or not stop then
-      break
-    elseif start <= col and stop >= col then
-      local entire = line:sub(start, stop)
-      contents = (entire or ''):match(util.link_pattern)
-      break
+
+function _MICROKASTEN._run_hook(hook)
+  local type_ = type(hook)
+  if type_ == 'table' then
+    for _, hk in ipairs(hook) do
+      _MICROKASTEN.run_hook(hk)
     end
-    i = stop + 1
-  end
-
-  local seq = nil
-  local uid = nil
-  local label = nil
-  if contents and #contents > 0 then
-    label = contents:match('|%s*(.+)$')
-    if label and #label > 0 then
-      contents = contents:match('^(.*)%s*|')
-    end
-
-    seq = contents:match('^(.+)%s*:')
-    if seq and #seq > 0 then
-      contents = contents:match(':%s*(.*)%s*$')
-    end
-
-    uid = contents:match('^%s*(.*)%s*$')
-  end
-
-  return uid, label, seq
-end
-
-local function parse_link_at_cursor()
-  local pos = vim.fn.getpos('.')
-  local row = pos[2]
-  local col = pos[3]
-  return parse_link_at(row, col)
-end
-
-local function list_filenames(dir, prefix)
-  local filenames = {}
-
-  local cmd = ''
-  if vim.fn.has('win32') > 0 then
-    local p = dir:gsub('[\\/]+', '\\')
-    if prefix and #prefix > 0 then
-      p = p .. '\\' .. prefix .. '*'
-    end
-    -- do /not/ escape backslashes if you want dir command to work
-    cmd = 'dir /B "' .. vim.fn.escape(p, '"') .. '" 2>nul'
-  else
-    local p = dir:gsub('[\\/]+', '/')
-    if prefix and #prefix > 0 then
-      p = p .. '/' .. prefix
-    end
-    cmd = 'ls -A -1 "' .. vim.fn.escape(p, '"') .. '"* 2>/dev/null'
-  end
-
-  local status_ok, pipe = pcall(io.popen, cmd)
-  if status_ok and pipe ~= nil then
-    local output = pipe:read('*a')
-    pipe:close()
-
-    for line in string.gmatch(output .. '\n', '([^\n]*)\n') do
-      line = line:gsub('^%s*', ''):gsub('%s*$', '')
-      if #line > 0 then
-        table.insert(filenames, line)
-      end
-    end
-  end
-
-  return filenames
-end
-
-local function open_note_in_dir(uid, dir, pick_win)
-  local filenames = list_filenames(dir, uid)
-  if filenames and #filenames > 0 then
-    table.sort(filenames)
-    if #filenames[1] > 0 then
-      if pick_win then
-        local winnr = require('window-picker').pick_window({
-          include_current_win = true,
-          selection_chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',
-        })
-        if winnr and winnr > 0 then
-          vim.api.nvim_set_current_win(winnr)
-          vim.cmd('silent! edit! ' .. vim.fn.escape(filenames[1], ' '))
-        end
-      else
-        vim.cmd('silent! edit ' .. vim.fn.escape(filenames[1], ' '))
-      end
-    end
+  elseif type_ == 'function' then
+    hook()
   end
 end
 
-local function create_note_at(dir, title, file_ext)
-  if not dir or #dir <= 0 then
-    dir = vim.fn.getcwd(-1, -1)
-  end
-  dir = vim.fn.fnamemodify(dir, ':p')
 
-  file_ext = (file_ext and file_ext:lower())
-    or state.default_extension
-    or state.file_extensions[1]
-    or '.md'
-  if file_ext:sub(1, 1) ~= '.' then
-    file_ext = '.' .. file_ext
-  end
-
-  local filename = util.generate_uid()
-  if title and #title > 0 then
-    filename = filename .. ' ' .. title
-  end
-  filename = filename .. file_ext
-
-  local path_sep = '/'
-  if vim.fn.has('win32') > 0 then
-    path_sep = '\\'
-  end
-
-  local filepath = dir .. path_sep .. filename
-  vim.cmd(
-    'silent! edit! ' .. vim.fn.escape(filepath, ' ') .. ' | silent! write'
-  )
+function _MICROKASTEN.on_attach()
+  usermisc.apply_syntax()
+  _MICROKASTEN._run_hook(usermisc.on_attach)
 end
 
-local function retitle_note_at(filepath, title)
-  local cwd = vim.fn.getcwd(-1, -1)
-  local src_fn = paths.canonical(filepath, cwd)
-  local target_fn = util.to_retitled_filename(src_fn, title)
 
-  vim.fn.mkdir(paths.dirname(target_fn), 'p')
-  vim.fn.rename(src_fn, target_fn)
-
-  local note_bufnr = vim.fn.bufnr(src_fn)
-  if note_bufnr >= 0 then
-    vim.api.nvim_buf_set_name(note_bufnr, target_fn)
-  end
-
-  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    local buffn = vim.api.nvim_buf_get_name(bufnr)
-    if buffn then
-      buffn = paths.canonical(buffn, cwd)
-      if buffn == src_fn then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-        for _, winid in ipairs(vim.fn.win_findbuf(bufnr)) do
-          if note_bufnr < 0 then
-            note_bufnr = vim.api.nvim_create_buf(true, false)
-            vim.api.nvim_buf_set_name(note_bufnr, target_fn)
-          end
-          vim.api.nvim_win_set_buf(winid, note_bufnr)
-        end
-      end
-    end
-  end
-
-  if note_bufnr >= 0 then
-    local orig_winid = vim.fn.win_getid()
-    if orig_winid >= 0 then
-      for _, winid in ipairs(vim.fn.win_findbuf(note_bufnr)) do
-        vim.api.nvim_set_current_win(winid)
-        vim.cmd('silent! write!')
-      end
-      vim.api.nvim_set_current_win(orig_winid)
-    end
-  end
-end
-
-local action_to_callback = {
-  put_uid = function(e)
-    if e.uid and #e.uid > 0 then
-      vim.api.nvim_put({ e.uid }, 'b', false, true)
-    end
-  end,
-  put_path = function(e)
-    if e.path and #e.path > 0 then
-      vim.api.nvim_put({ e.path }, 'b', false, true)
-    end
-  end,
-  yank_uid = function(e)
-    vim.fn.setreg('"', e.uid)
-  end,
-  yank_path = function(e)
-    vim.fn.setreg('"', e.path)
-  end,
-  open = function(e)
-    if e.path and #e.path > 0 then
-      local winnr = require('window-picker').pick_window({
-        include_current_win = true,
-        selection_chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',
-      })
-      if winnr and winnr > 0 then
-        vim.api.nvim_set_current_win(winnr)
-        vim.cmd('edit! ' .. vim.fn.escape(e.path, ' '))
-      end
-    end
-  end,
-}
-
-function module.setup(opts)
-  opts = opts or {}
-
-  state.file_extensions = opts.file_extensions or file_extensions
-  state.default_extension = opts.default_extension or file_extensions[1]
-
-  _MicrokastenOnAttach = nil
-
+local function init_autocmds()
   vim.cmd('augroup microkasten_syntax')
   vim.cmd('autocmd!')
 
-  for _, ext in ipairs(state.file_extensions) do
-    ext = ext:gsub('^%.+', '')
+  local pats = {}
+  local exts = usermisc.exts or { '.norg', '.md' }
+  for _, ext in ipairs(exts) do
+    ext = ext:gsub('^[%.%s]+', ''):gsub('%s+$', '')
     if ext and #ext > 0 then
-      vim.cmd(
-        'autocmd BufEnter,BufRead,BufNewFile *.'
-          .. ext
-          .. ' '
-          .. 'syntax region String matchgroup=String '
-          .. 'start=/\\[\\[/ end=/\\]\\]/ display oneline'
-      )
-      vim.cmd(
-        'autocmd BufEnter,BufRead,BufNewFile *.'
-          .. ext
-          .. ' '
-          .. 'syntax match String "\v#[a-zA-ZÀ-ÿ]+[a-zA-ZÀ-ÿ0-9/\\-_]*"'
-      )
-
-      if type(opts.on_attach) == 'function' then
-        _MicrokastenOnAttach = opts.on_attach
-        vim.cmd(
-          'autocmd BufEnter,BufRead,BufNewFile *.'
-            .. ext
-            .. ' '
-            .. 'lua if _MicrokastenOnAttach then _MicrokastenOnAttach() end'
-        )
-      end
+      table.insert(pats, '*.' .. ext)
     end
+  end
+
+  local exts_pat = table.concat(pats, ',')
+  if exts_pat and #exts_pat > 0 then
+    local cmd = ([[
+      autocmd BufEnter,BufRead,BufNewFile {EXTS} lua
+      \ if _MICROKASTEN and _MICROKASTEN.on_attach then
+      \   _MICROKASTEN.on_attach()
+      \ end
+    ]]):gsub('{EXTS}', exts_pat)
+    vim.cmd(cmd)
   end
 
   vim.cmd('augroup END')
 end
 
-function module.open_link_at_cursor(dir, pick_win)
+--- set up module for use. can safely be called more than once
+---@param opts? table options
+function M.setup(opts)
+  opts = opts or {}
+
+  tables.overwrite({}, usermisc)
+  tables.merge(opts, usermisc)
+
+  init_autocmds()  -- TODO: make autocmds configurable
+end
+
+function M.tag_picker(opts)
+  local is_ok, telescope = pcall(require, 'telescope')
+  if is_ok and telescope then
+    opts = opts and vim.deepcopy(opts) or {}
+    opts.cwd = opts.cwd or vim.fn.getcwd(-1, -1)
+    telescope.extensions.microkasten.tags(opts)
+  end
+end
+
+function M.filename_picker(opts)
+  local is_ok, telescope = pcall(require, 'telescope')
+  if is_ok and telescope then
+    opts = opts and vim.deepcopy(opts) or {}
+    opts.cwd = opts.cwd or vim.fn.getcwd(-1, -1)
+    telescope.extensions.microkasten.filenames(opts)
+  end
+end
+
+function M.grep_picker(opts)
+  local is_ok, telescope = pcall(require, 'telescope')
+  if is_ok and telescope then
+    opts = opts and vim.deepcopy(opts) or {}
+    opts.cwd = opts.cwd or vim.fn.getcwd(-1, -1)
+    telescope.extensions.microkasten.grep(opts)
+  end
+end
+
+function M.backlink_picker(opts)
+  local is_ok, telescope = pcall(require, 'telescope')
+  if is_ok and telescope then
+    opts = opts and vim.deepcopy(opts) or {}
+    opts.cwd = opts.cwd or vim.fn.getcwd(-1, -1)
+    telescope.extensions.microkasten.backlinks(opts)
+  end
+end
+
+
+---@param dir? string dir to search in or default for cwd
+---@param uid string uid of target note
+---@param pick_win? boolean false to disable window picker
+function M.open_uid(dir, uid, pick_win)
+  if pick_win == nil then
+    pick_win = true
+  end
+  dir = dir or vim.loop.cwd()
   if not dir then
-    dir = vim.fn.expand('%:p:h')
+    return
   end
-  local uid, _, _ = parse_link_at_cursor()
-  if uid and #uid > 0 then
-    open_note_in_dir(uid, dir, pick_win)
+  local find_uid_in_dir = usermisc.find_uid_in_dir
+  local target = find_uid_in_dir(dir, uid)
+  if not target or #target <= 0 then
+    return
   end
+  util.open_in_window(target, pick_win)
 end
 
-function module.open_note(uid, dir, pick_win)
-  open_note_in_dir(uid, dir, pick_win)
-end
 
-function module.open_filename_finder(action)
-  action = action or 'open'
-  picker.open_filename_picker(vim.fn.getcwd(-1, -1), action_to_callback[action])
-end
-
-function module.open_live_grep_finder(action)
-  action = action or 'open'
-  picker.open_live_grep_picker(
-    vim.fn.getcwd(-1, -1),
-    action_to_callback[action]
-  )
-end
-
-function module.open_backlink_finder(action)
-  action = action or 'open'
-  local uid = get_current_uid()
-  if uid and uid ~= '' then
-    picker.open_backlink_picker(
-      uid,
-      vim.fn.getcwd(-1, -1),
-      action_to_callback[action]
-    )
+---@param dir? string dir to search in
+---@param link notelink link to target note
+---@param pick_win? boolean false to disable window picker
+function M.open_link(dir, link, pick_win)
+  if pick_win == nil then
+    pick_win = true
   end
+
+  if not link or not link.uid or #link.uid <= 0 then
+    return
+  end
+  M.open_uid(dir, link.uid, pick_win)
 end
 
-function module.parse_uid(filename)
-  return util.parse_uid(filename)
+
+---@param pos? cursor cursor pos
+---@return notelink? link link info if link exists
+function M.parse_link_at(pos)
+  local link = util.get_link_at(pos, usermisc.link_pat)
+  if not link then
+    return nil
+  end
+  local parse = usermisc.parse_link
+  return parse(link)
 end
 
-function module.get_current_uid()
-  return get_current_uid()
+---@param pos? cursor cursor pos
+---@param pick_win? boolean false to disable window picker
+function M.open_link_at(pos, pick_win)
+  if pick_win == nil then
+    pick_win = true
+  end
+
+  local link = M.parse_link_at(pos)
+  if not link then
+    return
+  end
+
+  local dir = vim.fn.expand('%:p:h')
+  if not dir or #dir <= 0 then
+    return
+  end
+
+  M.open_link(dir, link, pick_win)
 end
 
-function module.parse_link_at(row, col)
-  return parse_link_at(row, col)
+
+---@param filename? string filename or default for current file
+---@return noteinfo? note note info
+function M.parse_filename(filename)
+  filename = filename or vim.fn.expand('%:t')
+  if not filename or #filename <= 0 then
+    return nil
+  end
+
+  local parse_filename = usermisc.parse_filename
+  return parse_filename(filename)
 end
 
-function module.parse_link_at_cursor()
-  return parse_link_at_cursor()
+function M.parse_uid(filename)
+  local info = M.parse_filename(filename)
+  return info and info.uid or nil
 end
 
-function module.create_note_at(dir, title, file_ext)
-  create_note_at(dir, title, file_ext)
+function M.parse_title(filename)
+  local info = M.parse_filename(filename)
+  return info and info.title or nil
 end
 
-function module.create_note()
-  vim.ui.input({ prompt = 'Note title: ', default = '' }, function(title)
-    title = (title or ''):gsub('^%s*', ''):gsub('%s*$', '')
-    if title and #title > 0 then
-      create_note_at(nil, title, nil)
-    end
+
+---@param dir? string folder to put new note in or default for cwd
+---@param title? string title of new note or default to prompt user
+---@param ext? string file extension for new note or default from config
+function M.create(dir, title, ext)
+  dir = dir or vim.fn.getcwd(-1, -1)
+  dir = dir:gsub('[\\/]+', '')
+  title = (title and title:gsub('^%s*', ''):gsub('%s*$', '')) or nil
+
+  vim.ui.input({ prompt = 'Note title: ', default = '' }, function(s)
+    title = (s and s:gsub('^%s*', ''):gsub('%s*$', '')) or nil
   end)
+
+  if not title then
+    return
+  end
+
+  ext = (ext and ext:lower()) or usermisc.default_ext or usermisc.exts[1] or nil
+  ext = (ext and ext:gsub('^%.+', '')) or nil
+  if not ext then
+    return
+  end
+
+  local generate_uid = usermisc.generate_uid
+  local generate_filename = usermisc.generate_filename
+  local generate_note = usermisc.generate_note
+
+  local info = { uid = generate_uid(), title = title, ext = ext }
+  local basename = generate_filename(info)
+  local filename = dir .. paths.sep() .. basename
+  local content = generate_note(info)
+
+  files.makedirs(dir)
+  if content and #content > 0 then
+    files.write_file(filename, content)
+  end
+
+  vim.cmd('silent! edit! ' .. vim.fn.escape(filename, ' ') .. ' | silent! write')
 end
 
-function module.retitle_note_at(filepath, title)
-  retitle_note_at(filepath, title)
-end
 
-function module.retitle_current_note()
-  local filepath = vim.fn.expand('%:p')
-  if filepath and #filepath > 0 then
-    vim.ui.input({ prompt = 'Rename note: ', default = '' }, function(title)
-      title = (title or ''):gsub('^%s*', ''):gsub('%s*$', '')
-      if title and #title > 0 then
-        retitle_note_at(filepath, title)
-      end
+---@param filename? string file to rename or default is current file
+---@param title? string new title or default to prompt user
+function M.rename(filename, title)
+  filename = filename or vim.fn.expand('%:p')
+  if not filename or #filename <= 0 then
+    return
+  end
+
+  local cwd = vim.fn.getcwd(-1, -1)
+  filename = paths.canonical(filename, cwd)
+  if not filename or #filename <= 0 then
+    return
+  end
+
+  local parse_filename = usermisc.parse_filename
+  local info = parse_filename(filename)
+  if not title or #title <= 0 then
+    vim.ui.input({ prompt = 'Rename note: ', default = '' }, function(s)
+      title = s
     end)
   end
+
+  title = (title and title:gsub('^%s*', ''):gsub('%s*$', '')
+    :gsub('[\\/]+', '')) or nil
+  if not title or #title <= 0 or title == info.title then
+    return
+  end
+
+  info.title = title
+
+  local generate_filename = usermisc.generate_filename
+  local new_filename = generate_filename(info)
+
+  vim.fn.mkdir(paths.dirname(new_filename), 'p')
+  ---@diagnostic disable-next-line: param-type-mismatch
+  vim.fn.rename(filename, new_filename)
 end
 
-function module.generate_uid()
-  return util.generate_uid()
+---@return string uid generated uid
+function M.generate_uid()
+  local generate = usermisc.generate_uid
+  return generate()
 end
 
-return module
+return M

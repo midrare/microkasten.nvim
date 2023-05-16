@@ -1,0 +1,74 @@
+local M = {}
+
+local tsmt = require("telescope.actions.mt")
+local tsactions = require('telescope.actions')
+local tsstate = require('telescope.actions.state')
+
+local winpicker_ok, winpicker = pcall(require, "window-picker")
+winpicker = winpicker_ok and winpicker or nil
+
+
+function M.put_uid(prompt_bufnr)
+  local picker = tsstate.get_current_picker(prompt_bufnr)
+  local entry = tsstate.get_selected_entry()
+  tsactions.close(prompt_bufnr)
+  if entry.uid and #entry.uid > 0 then
+    vim.api.nvim_put({ entry.uid }, "b", false, true)
+  end
+end
+
+function M.put_path(prompt_bufnr)
+  local picker = tsstate.get_current_picker(prompt_bufnr)
+  local entry = tsstate.get_selected_entry()
+  tsactions.close(prompt_bufnr)
+  if entry.path and #entry.path > 0 then
+    vim.api.nvim_put({ entry.path }, "b", false, true)
+  end
+end
+
+function M.yank_uid(prompt_bufnr)
+  local picker = tsstate.get_current_picker(prompt_bufnr)
+  local entry = tsstate.get_selected_entry()
+  local reg = vim.api.nvim_get_vvar('register') or '"'
+  tsactions.close(prompt_bufnr)
+  vim.fn.setreg(reg, entry.uid)
+end
+
+function M.yank_path(prompt_bufnr)
+  local picker = tsstate.get_current_picker(prompt_bufnr)
+  local entry = tsstate.get_selected_entry()
+  local reg = vim.api.nvim_get_vvar('register') or '"'
+  tsactions.close(prompt_bufnr)
+  vim.fn.setreg(reg, entry.path)
+end
+
+function M.open_file(prompt_bufnr)
+  local picker = tsstate.get_current_picker(prompt_bufnr)
+  local entry = tsstate.get_selected_entry()
+  tsactions.close(prompt_bufnr)
+  if entry.path and #entry.path > 0 then
+    if winpicker_ok and winpicker then
+      local winnr = winpicker.pick_window({
+        include_current_win = true,
+        selection_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
+      })
+
+      if not winnr or winnr < 0 then
+        return
+      end
+
+      vim.api.nvim_set_current_win(winnr)
+    end
+
+    vim.cmd("silent! edit! " .. vim.fn.escape(entry.path, " "))
+  end
+end
+
+function M.close(prompt_bufnr)
+  local picker = tsstate.get_current_picker(prompt_bufnr)
+  local entry = tsstate.get_selected_entry()
+  tsactions.close(prompt_bufnr)
+end
+
+
+return tsmt.transform_mod(M)
