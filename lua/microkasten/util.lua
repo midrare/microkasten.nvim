@@ -40,7 +40,7 @@ end
 
 ---@param filename string file to open
 ---@param pick_win? boolean true to ask user for window
-M.open_in_window = function(filename, pick_win)
+function M.open_in_window(filename, pick_win)
   if pick_win then
     local winnr = require("window-picker").pick_window({
       include_current_win = true,

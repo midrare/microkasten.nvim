@@ -2,7 +2,7 @@ local M = {}
 
 local paths = require("microkasten.luamisc.paths")
 
-M.get_open_filelist = function(cwd)
+function M.get_open_filelist(cwd)
   local bufnrs = vim.tbl_filter(function(b)
     if 1 ~= vim.fn.buflisted(b) then
       return false

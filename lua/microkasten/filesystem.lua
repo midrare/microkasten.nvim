@@ -19,7 +19,7 @@ end
 ---@param dir string path to dir
 ---@param prefix string? include only if start of filename matches
 ---@return string[] filenames filenames in dir
-M.list_dir = function(dir, prefix)
+function M.list_dir(dir, prefix)
   prefix = (prefix and prefix:gsub("[^a-zA-Z0-9_%-:# %.]", "")) or nil
   local filenames = {}
 
