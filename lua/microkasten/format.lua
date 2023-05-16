@@ -1,7 +1,10 @@
 local M = {}
 
+local defaultable = require("microkasten.defaultable")
 local util = require("microkasten.util")
 
+
+local attrs = {}
 
 local function clean_tags(tags)
   local cleaned = {}
@@ -95,5 +98,12 @@ function M.generate_note(note)
   ---@diagnostic disable-next-line: param-type-mismatch
   return ext_to_gen[ext](ext)
 end
+
+function M.exts()
+  return { '.md', '.norg' }
+end
+
+---@type string
+M.default_ext = '.md'
 
 return M

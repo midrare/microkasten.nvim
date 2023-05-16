@@ -38,8 +38,7 @@ local function init_autocmds()
   vim.cmd('autocmd!')
 
   local pats = {}
-  local exts = useropts.exts or { '.norg', '.md' }
-  for _, ext in ipairs(exts) do
+  for _, ext in ipairs(format.exts()) do
     ext = ext:gsub('^[%.%s]+', ''):gsub('%s+$', '')
     if ext and #ext > 0 then
       table.insert(pats, '*.' .. ext)
@@ -119,8 +118,7 @@ function M.open_uid(dir, uid, pick_win)
   if not dir then
     return
   end
-  local find_uid_in_dir = useropts.find_uid_in_dir
-  local target = find_uid_in_dir(dir, uid)
+  local target = util.find_uid_in_dir(dir, uid)
   if not target or #target <= 0 then
     return
   end
@@ -212,15 +210,13 @@ function M.create(dir, title, ext)
     return
   end
 
-  ext = (ext and ext:lower()) or useropts.default_ext or useropts.exts[1] or nil
+  ext = (ext and ext:lower()) or format.default_ext
   ext = (ext and ext:gsub('^%.+', '')) or nil
   if not ext then
     return
   end
 
-  local generate_uid = useropts.generate_uid
-
-  local info = { uid = generate_uid(), title = title, ext = ext }
+  local info = { uid = util.generate_uid(), title = title, ext = ext }
   local basename = filenames.generate_filename(info)
   local filename = dir .. paths.sep() .. basename
   local content = format.generate_note(info)
@@ -272,8 +268,7 @@ end
 
 ---@return string uid generated uid
 function M.generate_uid()
-  local generate = useropts.generate_uid
-  return generate()
+  return util.generate_uid()
 end
 
 return M

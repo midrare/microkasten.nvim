@@ -102,4 +102,20 @@ function M.generate_timestamp()
   return dt:fmt(datetime_pat)
 end
 
+local _last_uid = nil
+---@return string uid generated uid
+function M.generate_uid()
+  local pat = '%Y%m%d%H%M'
+  local dt = date(true)
+  local uid = dt:fmt(pat)
+
+  while uid == _last_uid do
+    dt = dt:addminutes(1)
+    uid = dt:fmt(pat)
+  end
+
+  _last_uid = uid
+  return uid
+end
+
 return M

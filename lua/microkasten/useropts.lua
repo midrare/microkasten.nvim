@@ -28,20 +28,6 @@ local function evaluate(o)
 end
 
 
----@return string uid generated uid
-function M.generate_uid()
-  local pat = '%Y%m%d%H%M'
-  local dt = date(true)
-  local uid = dt:fmt(pat)
-
-  while uid == _last_uid do
-    dt = dt:addminutes(1)
-    uid = dt:fmt(pat)
-  end
-
-  _last_uid = uid
-  return uid
-end
 
 flattenable.tags_regex = true
 ---@return string|string[] pat regex pattern to match tags
@@ -94,44 +80,10 @@ end
 ---@type string
 M.data_dir = vim.fn.stdpath('data') .. '/microkasten'
 
-flattenable.exts = true
----@type string[]
-M.exts = { '.md', '.norg' }
+---@type string|string[]
+M.exts = {}
 
----@type string
-M.default_ext = '.md'
+---@type string?
+M.default_ext = nil
 
-
-local M2 = vim.deepcopy(M)
-return setmetatable(M, {
-  __index = function(o, attr)
-    local value = rawget(o, attr)
-    if value == nil then
-      value = rawget(M2, attr)
-    end
-
-    if evaluable[attr] then
-      value = evaluate(value)
-    end
-
-    if flattenable[attr] then
-      if type(value) == "function" then
-        local f = value
-        value = function(...)
-          return tables.flattened({ f(...) })
-        end
-      else
-        value = tables.flattened({ value })
-      end
-    end
-
-    if functionable[attr] and type(value) ~= "function" then
-      local r = value
-      value = function()
-        return r
-      end
-    end
-
-    return value
-  end,
-})
+return M
