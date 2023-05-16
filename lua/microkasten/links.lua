@@ -20,6 +20,10 @@ end
 ---@param link string
 ---@return notelink link
 function M.parse_link(link)
+  if useropts.parse_link then
+    return useropts.parse_link(link)
+  end
+
   link = link:gsub("^%[%[", ""):gsub("%]%]$", "")
 
   local start, stop, title = link:find("|%s*(.+)$")

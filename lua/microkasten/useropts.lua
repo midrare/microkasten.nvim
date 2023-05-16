@@ -34,9 +34,8 @@ M.parse_filename = nil
 ---@type (fun(note: noteinfo): string)?
 M.generate_filename = nil
 
-M.links = {
-  regex = nil,
-  luapat = nil,
-}
+--- parse a string into a link
+---@type (fun(link: string): notelink)?
+M.parse_link = nil
 
 return M
