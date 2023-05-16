@@ -1,10 +1,6 @@
 local M = {}
 
-local tables = require('microkasten.luamisc.tables')
-local date = require('microkasten.luamisc.date')
 local paths = require('microkasten.luamisc.paths')
-local util = require('microkasten.util')
-local actions = require('microkasten.telescope.picker.actions')
 
 
 ---@param filename string file name to parse

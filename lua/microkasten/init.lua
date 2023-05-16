@@ -5,6 +5,7 @@ local paths = require('microkasten.luamisc.paths')
 local tables = require('microkasten.luamisc.tables')
 
 local format = require('microkasten.format')
+local filesystem = require('microkasten.filesystem')
 local links = require('microkasten.links')
 local filenames = require('microkasten.filenames')
 local syntax = require('microkasten.syntax')
@@ -118,7 +119,7 @@ function M.open_uid(dir, uid, pick_win)
   if not dir then
     return
   end
-  local target = util.find_uid_in_dir(dir, uid)
+  local target = filesystem.find_uid_in_dir(dir, uid)
   if not target or #target <= 0 then
     return
   end
@@ -210,7 +211,7 @@ function M.create(dir, title, ext)
     return
   end
 
-  ext = (ext and ext:lower()) or format.default_ext
+  ext = (ext and ext:lower()) or format.default_ext()
   ext = (ext and ext:gsub('^%.+', '')) or nil
   if not ext then
     return

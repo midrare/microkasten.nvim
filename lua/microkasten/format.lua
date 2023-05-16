@@ -1,10 +1,7 @@
 local M = {}
 
-local defaultable = require("microkasten.defaultable")
 local util = require("microkasten.util")
 
-
-local attrs = {}
 
 local function clean_tags(tags)
   local cleaned = {}
@@ -99,11 +96,14 @@ function M.generate_note(note)
   return ext_to_gen[ext](ext)
 end
 
+---@return string[] exts file extensions
 function M.exts()
   return { '.md', '.norg' }
 end
 
----@type string
-M.default_ext = '.md'
+---@return string ext default file extension
+function M.default_ext()
+  return '.md'
+end
 
 return M
