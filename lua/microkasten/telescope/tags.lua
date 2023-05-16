@@ -4,6 +4,7 @@ local arrays = require("microkasten.luamisc.arrays")
 local makecmd = require("microkasten.telescope.picker.makecmd")
 local entrymaker = require("microkasten.telescope.picker.entrymaker")
 local useropts = require("microkasten.useropts")
+local tags = require("microkasten.tags")
 
 local tsconfig = require("telescope.config").values
 local tsfinders = require("telescope.finders")
@@ -34,7 +35,7 @@ function M.open(opts)
 
   opts.prompt = nil
 
-  local patterns = vim.tbl_flatten({useropts.tags_regex()})
+  local patterns = vim.tbl_flatten({tags.tags_regex()})
   for _, pat in ipairs(patterns) do
     table.insert(opts.additional_args, "-e")
     table.insert(opts.additional_args, pat)

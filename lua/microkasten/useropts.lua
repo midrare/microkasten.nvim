@@ -29,21 +29,6 @@ end
 
 
 
-flattenable.tags_regex = true
----@return string|string[] pat regex pattern to match tags
-function M.tags_regex()
-  return {
-    "(?:\\b|[!\"#$%&\'()*+,\\-\\./:;<=>?@\\^_`{|}~])"
-      .. "#([a-zA-Z][a-zA-Z0-9\\-_]*)"
-      .. "(?:\\b|[!\"#$%&\'()*+,\\-\\./:;<=>?@\\^_`{|}~])",
-    "^\\s*[tT][aA][gG][sS]?:\\s.*"
-      .. "(?:\\b|[!\"#$%&\'()*+,\\-\\./:;<=>?@\\^_`{|}~])"
-      .. "([a-zA-Z][a-zA-Z0-9\\-_]*)"
-      .. "(?:\\b|[!\"#$%&\'()*+,\\-\\./:;<=>?@\\^_`{|}~])"
-  }
-end
-
-
 function M.on_attach()
 end
 
