@@ -1,7 +1,7 @@
 local M = {}
 
-local entrymaker = require('microkasten.telescope.util.entrymaker')
-local makecmd = require('microkasten.telescope.util.makecmd')
+local entrymaker = require('microkasten.telescope.picker.entrymaker')
+local makecmd = require('microkasten.telescope.picker.makecmd')
 local useropts = require("microkasten.useropts")
 
 local tsconfig = require("telescope.config").values

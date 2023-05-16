@@ -2,7 +2,7 @@ local M = {}
 
 local tele_config = require("telescope.config").values
 
-local opened = require("microkasten.telescope.util.opened")
+local opened = require("microkasten.telescope.picker.opened")
 
 local function add_flag(cmd, flag, is_enabled)
   if type(is_enabled) == "function" then

@@ -3,7 +3,7 @@ local M = {}
 local paths = require("microkasten.luamisc.paths")
 local useropts = require("microkasten.useropts")
 
-local tsutils = require("telescope.utils")
+local tsutils = require("telescope.pickers")
 
 local function resolve_highlights(hlsegs)
   local texts = ""
