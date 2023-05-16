@@ -1,5 +1,6 @@
 local M = {}
 
+local arrays = require("microkasten.luamisc.arrays")
 local files = require("microkasten.luamisc.files")
 local paths = require("microkasten.luamisc.paths")
 local tables = require("microkasten.luamisc.tables")
@@ -12,42 +13,40 @@ local syntax = require("microkasten.syntax")
 local useropts = require("microkasten.useropts")
 local util = require("microkasten.util")
 
-_MICROKASTEN = {}
 
-function _MICROKASTEN._run_hook(hook)
+function M._run_hook(hook)
   local type_ = type(hook)
   if type_ == "table" then
     for _, hk in ipairs(hook) do
-      _MICROKASTEN.run_hook(hk)
+      M._run_hook(hk)
     end
   elseif type_ == "function" then
     hook()
   end
 end
 
-function _MICROKASTEN.on_attach()
+function M._on_attach()
   syntax.apply_syntax()
-  _MICROKASTEN._run_hook(useropts.on_attach)
+  M._run_hook(useropts.on_attach)
 end
+
 
 local function init_autocmds()
   vim.cmd("augroup microkasten_syntax")
   vim.cmd("autocmd!")
 
-  local pats = {}
-  for _, ext in ipairs(formats.exts()) do
-    ext = ext:gsub("^[%.%s]+", ""):gsub("%s+$", "")
-    if ext and #ext > 0 then
-      table.insert(pats, "*." .. ext)
-    end
-  end
-
+  local pats = formats.exts()
+  arrays.transform(pats, function(s) return "*" .. s end)
   local exts_pat = table.concat(pats, ",")
+
   if exts_pat and #exts_pat > 0 then
     local cmd = ([[
       autocmd BufEnter,BufRead,BufNewFile {EXTS} lua
-      \ if _MICROKASTEN and _MICROKASTEN.on_attach then
-      \   _MICROKASTEN.on_attach()
+      \ do
+      \   local microkasten_ok, microkasten = pcall(require, "microkasten")
+      \   if microkasten_ok and microkasten then
+      \     microkasten._on_attach()
+      \   end
       \ end
     ]]):gsub("{EXTS}", exts_pat)
     vim.cmd(cmd)
