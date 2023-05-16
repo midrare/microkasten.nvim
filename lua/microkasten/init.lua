@@ -4,6 +4,7 @@ local files = require('microkasten.luamisc.files')
 local paths = require('microkasten.luamisc.paths')
 local tables = require('microkasten.luamisc.tables')
 
+local format = require('microkasten.format')
 local useropts = require('microkasten.useropts')
 local util = require('microkasten.util')
 
@@ -218,12 +219,11 @@ function M.create(dir, title, ext)
 
   local generate_uid = useropts.generate_uid
   local generate_filename = useropts.generate_filename
-  local generate_note = useropts.generate_note
 
   local info = { uid = generate_uid(), title = title, ext = ext }
   local basename = generate_filename(info)
   local filename = dir .. paths.sep() .. basename
-  local content = generate_note(info)
+  local content = format.generate_note(info)
 
   files.makedirs(dir)
   if content and #content > 0 then
