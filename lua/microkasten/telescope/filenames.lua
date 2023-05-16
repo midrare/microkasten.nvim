@@ -2,7 +2,7 @@ local M = {}
 
 local entrymaker = require('microkasten.telescope.picker.entrymaker')
 local makecmd = require('microkasten.telescope.picker.makecmd')
-local useropts = require("microkasten.useropts")
+local mappings = require("microkasten.telescope.picker.mappings")
 
 local tsconfig = require("telescope.config").values
 local tsfinders = require("telescope.finders")
@@ -35,7 +35,7 @@ function M.open(opts)
       finder = finder,
       previewer = tsconfig.file_previewer(opts),
       sorter = tsconfig.file_sorter(opts),
-      attach_mappings = useropts.telescope_mappings,
+      attach_mappings = mappings.telescope_mappings,
     })
     :find()
 end

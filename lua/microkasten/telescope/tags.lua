@@ -3,7 +3,7 @@ local M = {}
 local arrays = require("microkasten.luamisc.arrays")
 local makecmd = require("microkasten.telescope.picker.makecmd")
 local entrymaker = require("microkasten.telescope.picker.entrymaker")
-local useropts = require("microkasten.useropts")
+local mappings = require("microkasten.telescope.picker.mappings")
 local tags = require("microkasten.tags")
 
 local tsconfig = require("telescope.config").values
@@ -55,7 +55,7 @@ function M.open(opts)
       prompt_title = opts.title or "Search tags",
       finder = find_job,
       sorter = tsconfig.generic_sorter(opts),
-      attach_mappings = useropts.telescope_mappings,
+      attach_mappings = mappings.telescope_mappings,
     })
     :find()
 end
