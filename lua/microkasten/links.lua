@@ -48,7 +48,7 @@ end
 ---@param pat? string link pattern
 ---@param pos? cursor cursor pos
 ---@return string? link link string
-M.get_link_at = function(pos, pat)
+function M.get_link_at(pos, pat)
   pat = pat or '%[%[..*%]%]'
   if not pos then
     local o = vim.fn.getpos('.')
