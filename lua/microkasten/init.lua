@@ -5,6 +5,7 @@ local paths = require('microkasten.luamisc.paths')
 local tables = require('microkasten.luamisc.tables')
 
 local format = require('microkasten.format')
+local links = require('microkasten.links')
 local filenames = require('microkasten.filenames')
 local useropts = require('microkasten.useropts')
 local util = require('microkasten.util')
@@ -144,12 +145,11 @@ end
 ---@param pos? cursor cursor pos
 ---@return notelink? link link info if link exists
 function M.parse_link_at(pos)
-  local link = util.get_link_at(pos, useropts.link_pat)
+  local link = links.get_link_at(pos)
   if not link then
     return nil
   end
-  local parse = useropts.parse_link
-  return parse(link)
+  return links.parse_link(link)
 end
 
 ---@param pos? cursor cursor pos

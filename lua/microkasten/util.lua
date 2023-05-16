@@ -4,22 +4,6 @@ local date = require('microkasten.luamisc.date')
 local paths = require('microkasten.luamisc.paths')
 
 
-local function find_pat_at(pat, s, idx)
-  local pos = 1
-  while pos <= #s do
-    local start, stop = s:find(pat, pos)
-    if not start or not stop then
-      break
-    end
-    if start <= idx and stop >= idx then
-      return s:sub(start, stop)
-    end
-    pos = stop + 1
-  end
-  return nil
-end
-
-
 function M.rename_bufs(src_fn, target_fn, cwd)
   local note_bufnr = vim.fn.bufnr(src_fn)
   if note_bufnr >= 0 then
@@ -53,24 +37,6 @@ function M.rename_bufs(src_fn, target_fn, cwd)
       vim.api.nvim_set_current_win(orig_winid)
     end
   end
-end
-
----@param pat? string link pattern
----@param pos? cursor cursor pos
----@return string? link link string
-M.get_link_at = function(pos, pat)
-  pat = pat or '%[%[..*%]%]'
-  if not pos then
-    local o = vim.fn.getpos('.')
-    pos = { row = o[2], col = o[3] }
-  end
-
-  local line = vim.fn.getline(pos.row)
-  if not line or #line <= 0 then
-    return nil
-  end
-
-  return find_pat_at(pat, line, pos.col)
 end
 
 ---@param dir string path to dir

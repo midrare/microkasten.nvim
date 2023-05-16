@@ -50,13 +50,6 @@ function M.generate_uid()
   return uid
 end
 
----@param uid string uid of note
----@return string|string[] pat regex matching links that target provided note
-function M.backlinks_regex(uid)
-  return "\\[\\[[^\\n]*" .. uid .. "[^\\n]*\\]\\]"
-end
-
-
 flattenable.tags_regex = true
 ---@return string|string[] pat regex pattern to match tags
 function M.tags_regex()
@@ -85,29 +78,6 @@ function M.telescope_mappings(_, map)
   map("n", "<c-c>", actions.close)
   map("n", "<esc>", actions.close)
   return true
-end
-
-
----@param link string
----@return notelink link
-function M.parse_link(link)
-  link = link:gsub('^%[%[', '') :gsub('%]%]$', '')
-
-  local start, stop, title = link:find('|%s*(.+)$')
-  if start and stop then
-    link = link:sub(1, start - 1) .. link:sub(stop + 1)
-  end
-
-  ---@diagnostic disable-next-line: redefined-local
-  local start, stop, prefix = link:find('^(.+)%s*:%s*')
-  if start and stop then
-    link = link:sub(1, start - 1) .. link:sub(stop + 1)
-  end
-
-  ---@diagnostic disable-next-line: redefined-local, unused-local
-  link = link:gsub('^%s+', ''):gsub('%s+$', '')
-  local uid = link and #link > 0 and link or nil
-  return { uid = uid, title = title, prefix = prefix }
 end
 
 
