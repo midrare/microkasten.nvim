@@ -7,6 +7,7 @@ local tables = require('microkasten.luamisc.tables')
 local format = require('microkasten.format')
 local links = require('microkasten.links')
 local filenames = require('microkasten.filenames')
+local syntax = require('microkasten.syntax')
 local useropts = require('microkasten.useropts')
 local util = require('microkasten.util')
 
@@ -27,7 +28,7 @@ end
 
 
 function _MICROKASTEN.on_attach()
-  useropts.apply_syntax()
+  syntax.apply_syntax()
   _MICROKASTEN._run_hook(useropts.on_attach)
 end
 

@@ -28,13 +28,6 @@ local function evaluate(o)
 end
 
 
-function M.apply_syntax()
-  vim.cmd('syntax region String matchgroup=String'
-    .. ' start=/\\[\\[/ skip=/[^\\[\\]]/ end=/\\]\\]/ display oneline')
-  vim.cmd[[syntax match String "\v#[a-zA-Z]+[a-zA-Z0-9\\-_]*"]]
-end
-
-
 ---@return string uid generated uid
 function M.generate_uid()
   local pat = '%Y%m%d%H%M'
