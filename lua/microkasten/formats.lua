@@ -79,31 +79,18 @@ end
 ---@param note noteinfo note info
 ---@return string? note plain text note contents
 function M.generate_note(note)
-  local ext_to_gen = {
-    md = generate_markdown,
-    norg = generate_neorg,
+  local generators = {
+    [".md"] = generate_markdown,
+    [".norg"] = generate_neorg,
   }
 
   local ext = paths.canonical_ext(note.ext) or M.default_ext()
-  if not ext then
-    return nil
+  tables.merge(useropts.generate_note or {}, generators)
+  if generators[ext] then
+    return generators[ext](note)
   end
 
-  if type((useropts.formats or {}).generate) == "function" then
-    return useropts.formats.generate(note)
-  elseif
-    type((useropts.formats or {}).generate) == "table"
-    and useropts.formats[ext]
-  then
-    return useropts.formats[ext](note)
-  end
-
-  if not ext_to_gen[ext] then
-    return nil
-  end
-
-  ---@diagnostic disable-next-line: param-type-mismatch
-  return ext_to_gen[ext](ext)
+  return nil
 end
 
 ---@return string[] exts file extensions
@@ -122,11 +109,9 @@ end
 
 ---@return string ext default file extension
 function M.default_ext()
-  if useropts.default_ext then
-    local ext = paths.canonical_ext(useropts.default_ext)
-    if ext and #ext > 0 then
-      return ext
-    end
+  local ext = paths.canonical_ext(useropts.default_ext)
+  if ext then
+    return ext
   end
 
   local exts = M.exts()
