@@ -1,6 +1,8 @@
 local M = {}
 
-local function find_pat_at(pat, s, idx)
+local useropts = require("microkasten.useropts")
+
+local function find_luapat_at(pat, s, idx)
   local pos = 1
   while pos <= #s do
     local start, stop = s:find(pat, pos)
@@ -43,11 +45,9 @@ function M.backlinks_regex(uid)
   return "\\[\\[[^\\n]*" .. uid .. "[^\\n]*\\]\\]"
 end
 
----@param pat? string link pattern
 ---@param pos? cursor cursor pos
 ---@return string? link link string
-function M.get_link_at(pos, pat)
-  pat = pat or "%[%[..*%]%]"
+function M.get_link_at(pos)
   if not pos then
     local o = vim.fn.getpos(".")
     pos = { row = o[2], col = o[3] }
@@ -58,7 +58,8 @@ function M.get_link_at(pos, pat)
     return nil
   end
 
-  return find_pat_at(pat, line, pos.col)
+  local luapat = (useropts.links or {}).luapat or "%[%[..*%]%]"
+  return find_luapat_at(luapat, line, pos.col)
 end
 
 return M

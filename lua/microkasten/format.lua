@@ -1,5 +1,8 @@
 local M = {}
 
+local arrays = require("microkasten.luamisc.arrays")
+local tables = require("microkasten.luamisc.tables")
+local useropts = require("microkasten.useropts")
 local util = require("microkasten.util")
 
 local function clean_tags(tags)
@@ -13,6 +16,10 @@ local function clean_tags(tags)
     end
   end
   return tags
+end
+
+local function clean_ext(ext)
+  return "." .. ext:gsub("^[%s%.]+", ""):gsub("%s+$", ""):lower()
 end
 
 ---@param note noteinfo note info
@@ -95,12 +102,33 @@ end
 
 ---@return string[] exts file extensions
 function M.exts()
+  local exts = tables.flattened({ useropts.exts })
+  table.insert(exts, useropts.default_ext)
+  arrays.transform(exts, clean_ext)
+  arrays.uniqify(exts)
+
+  if #exts > 0 then
+    return exts
+  end
+
   return { ".md", ".norg" }
 end
 
 ---@return string ext default file extension
 function M.default_ext()
-  return ".md"
+  if useropts.default_ext then
+    local ext = clean_ext(useropts.default_ext)
+    if ext and #ext > 0 then
+      return ext
+    end
+  end
+
+  local exts = M.exts()
+  if exts and #exts > 0 then
+    return exts[1]
+  end
+
+  return '.md'
 end
 
 return M
