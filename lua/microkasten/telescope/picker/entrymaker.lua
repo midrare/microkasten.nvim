@@ -1,9 +1,9 @@
 local M = {}
 
 local paths = require("microkasten.luamisc.paths")
-local useropts = require("microkasten.useropts")
+local filenames = require("microkasten.filenames")
 
-local tsutils = require("telescope.pickers")
+local tsutils = require("telescope.utils")
 
 local function resolve_highlights(hlsegs)
   local texts = ""
@@ -40,8 +40,7 @@ local function filename_attrs(opts)
       return e._info.title
     end,
     _info = function(e)
-      local f = useropts.parse_filename
-      return f(e.filename)
+      return filenames.parse_filename(e.filename)
     end,
     path = function(e)
       return paths.abspath(e.filename, e.cwd)
@@ -170,8 +169,7 @@ local function grep_attrs(opts)
       return e._info.title
     end,
     _info = function(e)
-      local f = useropts.parse_filename
-      return f(e.filename)
+      return filenames.parse_filename(e.filename)
     end,
   }
 end

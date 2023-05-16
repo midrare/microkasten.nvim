@@ -5,6 +5,7 @@ local paths = require('microkasten.luamisc.paths')
 local tables = require('microkasten.luamisc.tables')
 
 local format = require('microkasten.format')
+local filenames = require('microkasten.filenames')
 local useropts = require('microkasten.useropts')
 local util = require('microkasten.util')
 
@@ -180,8 +181,7 @@ function M.parse_filename(filename)
     return nil
   end
 
-  local parse_filename = useropts.parse_filename
-  return parse_filename(filename)
+  return filenames.parse_filename(filename)
 end
 
 function M.parse_uid(filename)
@@ -218,10 +218,9 @@ function M.create(dir, title, ext)
   end
 
   local generate_uid = useropts.generate_uid
-  local generate_filename = useropts.generate_filename
 
   local info = { uid = generate_uid(), title = title, ext = ext }
-  local basename = generate_filename(info)
+  local basename = filenames.generate_filename(info)
   local filename = dir .. paths.sep() .. basename
   local content = format.generate_note(info)
 
@@ -248,8 +247,7 @@ function M.rename(filename, title)
     return
   end
 
-  local parse_filename = useropts.parse_filename
-  local info = parse_filename(filename)
+  local info = filenames.parse_filename(filename)
   if not title or #title <= 0 then
     vim.ui.input({ prompt = 'Rename note: ', default = '' }, function(s)
       title = s
@@ -264,8 +262,7 @@ function M.rename(filename, title)
 
   info.title = title
 
-  local generate_filename = useropts.generate_filename
-  local new_filename = generate_filename(info)
+  local new_filename = filenames.generate_filename(info)
 
   vim.fn.mkdir(paths.dirname(new_filename), 'p')
   ---@diagnostic disable-next-line: param-type-mismatch
