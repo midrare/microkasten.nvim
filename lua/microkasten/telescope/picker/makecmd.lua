@@ -54,9 +54,9 @@ function M.make_grep_cmd(opts)
     end
   end
 
-  add_values(additional_args, "--regexp", vim.tbl_flatten({opts.prompt}))
+  add_values(additional_args, "--regexp", vim.tbl_flatten({ opts.prompt }))
 
-  local search_paths = vim.tbl_flatten({opts.search_dirs})
+  local search_paths = vim.tbl_flatten({ opts.search_dirs })
   arrays.transform(search_paths, vim.fn.expand)
   if opts.grep_open_files then
     arrays.extend(search_paths, opened.get_open_filelist(opts.cwd) or {})
@@ -115,6 +115,11 @@ function M.make_fd_cmd(opts)
   add_values(cmd, "--search-path", opts.search_dirs)
   add_values(cmd, "--exclude", opts.exclude)
   add_values(cmd, "--extension", opts.ext_filter)
+
+  assert(
+    type(opts.prompt) ~= "table" or #opts.prompt <= 1,
+    "multiple regex not supported for fd"
+  )
 
   return vim.tbl_flatten({
     cmd,
