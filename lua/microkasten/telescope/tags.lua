@@ -34,7 +34,7 @@ function M.open(opts)
 
   opts.prompt = nil
 
-  local patterns = vim.tbl_flatten({ tags.tags_regex() })
+  local patterns = vim.tbl_flatten({ tags.generate_tags_regex() })
   for _, pat in ipairs(patterns) do
     table.insert(opts.additional_args, "-e")
     table.insert(opts.additional_args, pat)

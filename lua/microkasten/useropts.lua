@@ -49,4 +49,8 @@ M.generate_filename = nil
 ---@type fun()?
 M.apply_syntax = nil
 
+--- returns a set of regex patterns that matches tags of all forms
+---@type (fun(): string|string[])?
+M.generate_tags_regex = nil
+
 return M
