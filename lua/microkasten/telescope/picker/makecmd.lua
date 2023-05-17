@@ -5,9 +5,9 @@ local tele_config = require("telescope.config").values
 local arrays = require("microkasten.luamisc.arrays")
 local opened = require("microkasten.telescope.picker.opened")
 
-local function add_flag(cmd, flag, is_enabled)
+local function add_flag(cmd, opts, flag, is_enabled)
   if type(is_enabled) == "function" then
-    is_enabled = is_enabled()
+    is_enabled = is_enabled(opts)
   end
 
   if is_enabled then
@@ -15,14 +15,14 @@ local function add_flag(cmd, flag, is_enabled)
   end
 end
 
-local function add_values(cmd, flag, value)
+local function add_values(cmd, opts, flag, value)
   local type_ = type(value)
   if type_ == "table" then
     for _, val in ipairs(value) do
-      add_values(cmd, flag, val)
+      add_values(cmd, opts, flag, val)
     end
   elseif type_ == "function" then
-    add_values(cmd, flag, value())
+    add_values(cmd, opts, flag, value(opts))
   elseif value ~= nil then
     table.insert(cmd, flag)
     table.insert(cmd, value)
@@ -33,28 +33,17 @@ function M.make_grep_cmd(opts)
   opts = (opts and vim.tbl_deep_extend("force", {}, opts)) or {}
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
 
-  local grep_cmd = opts.vimgrep_arguments or tele_config.vimgrep_arguments
+  local cmd = opts.vimgrep_arguments or tele_config.vimgrep_arguments
 
-  local additional_args = {}
   if type(opts.additional_args) == "function" then
-    additional_args = opts.additional_args(opts)
+    arrays.extend(cmd, opts.additional_args(opts))
   elseif opts.additional_args then
-    additional_args = vim.tbl_flatten(opts.additional_args)
+    arrays.extend(cmd, vim.tbl_flatten({opts.additional_args}))
   end
 
-  if opts.type_filter then
-    table.insert(additional_args, "--type=" .. opts.type_filter)
-  end
-
-  if type(opts.glob_pattern) == "string" then
-    table.insert(additional_args, "--glob=" .. opts.glob_pattern)
-  elseif type(opts.glob_pattern) == "table" then
-    for _, pat in ipairs(opts.glob_pattern) do
-      table.insert(additional_args, "--glob=" .. pat)
-    end
-  end
-
-  add_values(additional_args, "--regexp", vim.tbl_flatten({ opts.prompt }))
+  add_values(cmd, opts, "--type", opts.type_filter)
+  add_values(cmd, opts, "--glob", opts.glob_pattern)
+  add_values(cmd, opts, "--regexp", opts.prompt)
 
   local search_paths = vim.tbl_flatten({ opts.search_dirs })
   arrays.transform(search_paths, vim.fn.expand)
@@ -63,8 +52,7 @@ function M.make_grep_cmd(opts)
   end
 
   return vim.tbl_flatten({
-    grep_cmd,
-    additional_args,
+    cmd,
     "--color=never",
     "--no-heading",
     "--",
@@ -108,13 +96,13 @@ function M.make_fd_cmd(opts)
 
   table.insert(cmd, opts.additional_args or {})
 
-  add_flag(cmd, "--hidden", opts.hidden)
-  add_flag(cmd, "--no-ignore", opts.ignore)
-  add_flag(cmd, "--follow", opts.follow)
+  add_flag(cmd, opts, "--hidden", opts.hidden)
+  add_flag(cmd, opts, "--no-ignore", opts.ignore)
+  add_flag(cmd, opts, "--follow", opts.follow)
 
-  add_values(cmd, "--search-path", opts.search_dirs)
-  add_values(cmd, "--exclude", opts.exclude)
-  add_values(cmd, "--extension", opts.ext_filter)
+  add_values(cmd, opts, "--search-path", opts.search_dirs)
+  add_values(cmd, opts, "--exclude", opts.exclude)
+  add_values(cmd, opts, "--extension", opts.ext_filter)
 
   assert(
     type(opts.prompt) ~= "table" or #opts.prompt <= 1,
