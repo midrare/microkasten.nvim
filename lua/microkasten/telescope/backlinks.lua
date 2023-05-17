@@ -21,7 +21,7 @@ function M.open(opts)
 
   assert(opts.uid, "expected uid to be provided")
 
-  opts.prompt = vim.tbl_flatten({ links.backlinks_regex(opts.uid) })
+  opts.prompt = vim.tbl_flatten({ links.generate_incoming_link_regex({uid = opts.uid}) })
   opts.entry_maker = opts.entry_maker or entrymaker.backlink_entry_maker(opts)
 
   local find_cmd = makecmd.make_grep_cmd(opts)

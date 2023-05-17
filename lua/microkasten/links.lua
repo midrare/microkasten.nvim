@@ -43,10 +43,10 @@ function M.parse_link(link)
   return { uid = uid, title = title, prefix = prefix }
 end
 
----@param uid string uid of note
----@return string|string[] pat regex matching links that target provided note
-function M.backlinks_regex(uid)
-  return "\\[\\[[^\\n]*" .. uid .. "[^\\n]*\\]\\]"
+---@param note noteinfo note targeted by link
+---@return string|string[] pat regex matching link that targets note
+function M.generate_incoming_link_regex(note)
+  return "\\[\\[[^\\n]*" .. note.uid .. "[^\\n]*\\]\\]"
 end
 
 ---@param line string line of note text maybe containing a link
