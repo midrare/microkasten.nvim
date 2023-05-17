@@ -2,6 +2,7 @@ local M = {}
 
 local tele_config = require("telescope.config").values
 
+local arrays = require("microkasten.luamisc.arrays")
 local opened = require("microkasten.telescope.picker.opened")
 
 local function add_flag(cmd, flag, is_enabled)
@@ -14,13 +15,14 @@ local function add_flag(cmd, flag, is_enabled)
   end
 end
 
-local function add_value(cmd, flag, value)
-  if type(value) == "table" then
+local function add_values(cmd, flag, value)
+  local type_ = type(value)
+  if type_ == "table" then
     for _, val in ipairs(value) do
-      add_value(cmd, flag, add_value(val))
+      add_values(cmd, flag, val)
     end
-  elseif value == "function" then
-    add_value(cmd, flag, value())
+  elseif type_ == "function" then
+    add_values(cmd, flag, value())
   elseif value ~= nil then
     table.insert(cmd, flag)
     table.insert(cmd, value)
@@ -52,13 +54,12 @@ function M.make_grep_cmd(opts)
     end
   end
 
-  local search_list = {}
+  add_values(additional_args, "--regexp", vim.tbl_flatten({opts.prompt}))
+
+  local search_paths = vim.tbl_flatten({opts.search_dirs})
+  arrays.transform(search_paths, vim.fn.expand)
   if opts.grep_open_files then
-    search_list = opened.get_open_filelist(opts.cwd) or {}
-  elseif opts.search_dirs then
-    for _, path in ipairs(opts.search_dirs) do
-      table.insert(search_list, vim.fn.expand(path))
-    end
+    arrays.extend(search_paths, opened.get_open_filelist(opts.cwd) or {})
   end
 
   return vim.tbl_flatten({
@@ -67,8 +68,7 @@ function M.make_grep_cmd(opts)
     "--color=never",
     "--no-heading",
     "--",
-    opts.prompt,
-    search_list,
+    search_paths,
   })
 end
 
@@ -112,9 +112,9 @@ function M.make_fd_cmd(opts)
   add_flag(cmd, "--no-ignore", opts.ignore)
   add_flag(cmd, "--follow", opts.follow)
 
-  add_value(cmd, "--search-path", opts.search_dirs)
-  add_value(cmd, "--exclude", opts.exclude)
-  add_value(cmd, "--extension", opts.ext_filter)
+  add_values(cmd, "--search-path", opts.search_dirs)
+  add_values(cmd, "--exclude", opts.exclude)
+  add_values(cmd, "--extension", opts.ext_filter)
 
   return vim.tbl_flatten({
     cmd,
