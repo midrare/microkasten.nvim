@@ -44,4 +44,9 @@ M.parse_filename = nil
 ---@type (fun(note: noteinfo): string)?
 M.generate_filename = nil
 
+--- apply syntax highlighting to the current buffer. typically this would
+--- consist of vim.cmd[[syntax ...]] commands
+---@type fun()?
+M.apply_syntax = nil
+
 return M
