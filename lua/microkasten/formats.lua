@@ -5,7 +5,6 @@ local date = require("microkasten.luamisc.date")
 local paths = require("microkasten.luamisc.paths")
 local tables = require("microkasten.luamisc.tables")
 local useropts = require("microkasten.useropts")
-local util = require("microkasten.util")
 
 local function clean_tags(tags)
   local cleaned = {}
