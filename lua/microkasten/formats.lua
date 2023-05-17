@@ -1,6 +1,7 @@
 local M = {}
 
 local arrays = require("microkasten.luamisc.arrays")
+local date = require("microkasten.luamisc.date")
 local paths = require("microkasten.luamisc.paths")
 local tables = require("microkasten.luamisc.tables")
 local useropts = require("microkasten.useropts")
@@ -19,12 +20,11 @@ local function clean_tags(tags)
   return tags
 end
 
-
 ---@param note noteinfo note info
 ---@return string? note plain text note contents
 local function generate_markdown(note)
   local tags = clean_tags(note.tags)
-  local created = util.generate_timestamp()
+  local created = M.generate_timestamp()
 
   local lines = {}
   if note.title then
@@ -52,7 +52,7 @@ end
 ---@return string? note plain text note contents
 local function generate_neorg(note)
   local tags = clean_tags(note.tags)
-  local created = util.generate_timestamp()
+  local created = M.generate_timestamp()
 
   local lines = {}
   if note.title then
@@ -123,6 +123,29 @@ function M.default_ext()
   end
 
   return ".md"
+end
+
+---@return string timestamp timestamp for note metadata
+function M.generate_timestamp()
+  local datetime_pat = "%Y/%m/%d %I:%M %p %Z"
+  local dt = date(true)
+  return dt:fmt(datetime_pat)
+end
+
+local _last_uid = nil
+---@return string uid generated uid
+function M.generate_uid()
+  local pat = "%Y%m%d%H%M"
+  local dt = date(true)
+  local uid = dt:fmt(pat)
+
+  while uid == _last_uid do
+    dt = dt:addminutes(1)
+    uid = dt:fmt(pat)
+  end
+
+  _last_uid = uid
+  return uid
 end
 
 return M

@@ -13,7 +13,6 @@ local syntax = require("microkasten.syntax")
 local useropts = require("microkasten.useropts")
 local util = require("microkasten.util")
 
-
 function M._run_hook(hook)
   local type_ = type(hook)
   if type_ == "table" then
@@ -30,13 +29,14 @@ function M._on_attach()
   M._run_hook(useropts.on_attach)
 end
 
-
 local function init_autocmds()
   vim.cmd("augroup microkasten_syntax")
   vim.cmd("autocmd!")
 
   local pats = formats.exts()
-  arrays.transform(pats, function(s) return "*" .. s end)
+  arrays.transform(pats, function(s)
+    return "*" .. s
+  end)
   local exts_pat = table.concat(pats, ",")
 
   if exts_pat and #exts_pat > 0 then
@@ -196,18 +196,20 @@ function M.create(dir, title, ext)
   vim.ui.input({ prompt = "Note title: ", default = "" }, function(s)
     title = (s and s:gsub("^%s*", ""):gsub("%s*$", "")) or nil
   end)
-
   if not title then
     return
   end
 
-  ext = (ext and ext:lower()) or formats.default_ext()
-  ext = (ext and ext:gsub("^%.+", "")) or nil
-  if not ext then
-    return
+  if #title <= 0 then
+    title = nil
   end
 
-  local info = { uid = util.generate_uid(), title = title, ext = ext }
+  ext = paths.canonical_ext(ext) or formats.default_ext()
+  if #ext <= 0 then
+    ext = nil
+  end
+
+  local info = { uid = formats.generate_uid(), title = title, ext = ext }
   local basename = filenames.generate_filename(info)
   local filename = dir .. paths.sep() .. basename
   local content = formats.generate_note(info)
@@ -217,7 +219,9 @@ function M.create(dir, title, ext)
     files.write_file(filename, content)
   end
 
-  vim.cmd("silent! edit! " .. vim.fn.escape(filename, " ") .. " | silent! write")
+  vim.cmd(
+    "silent! edit! " .. vim.fn.escape(filename, " ") .. " | silent! write"
+  )
 end
 
 ---@param filename? string file to rename or default is current file
@@ -241,7 +245,8 @@ function M.rename(filename, title)
     end)
   end
 
-  title = (title and title:gsub("^%s*", ""):gsub("%s*$", ""):gsub("[\\/]+", "")) or nil
+  title = (title and title:gsub("^%s*", ""):gsub("%s*$", ""):gsub("[\\/]+", ""))
+    or nil
   if not title or #title <= 0 or title == info.title then
     return
   end
@@ -257,7 +262,7 @@ end
 
 ---@return string uid generated uid
 function M.generate_uid()
-  return util.generate_uid()
+  return formats.generate_uid()
 end
 
 return M

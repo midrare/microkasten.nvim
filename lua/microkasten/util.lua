@@ -1,6 +1,5 @@
 local M = {}
 
-local date = require("microkasten.luamisc.date")
 local paths = require("microkasten.luamisc.paths")
 
 function M.rename_bufs(src_fn, target_fn, cwd)
@@ -53,29 +52,6 @@ function M.open_in_window(filename, pick_win)
   else
     vim.cmd("silent! edit " .. vim.fn.escape(filename, " "))
   end
-end
-
----@return string timestamp timestamp for note metadata
-function M.generate_timestamp()
-  local datetime_pat = "%Y/%m/%d %I:%M %p %Z"
-  local dt = date(true)
-  return dt:fmt(datetime_pat)
-end
-
-local _last_uid = nil
----@return string uid generated uid
-function M.generate_uid()
-  local pat = "%Y%m%d%H%M"
-  local dt = date(true)
-  local uid = dt:fmt(pat)
-
-  while uid == _last_uid do
-    dt = dt:addminutes(1)
-    uid = dt:fmt(pat)
-  end
-
-  _last_uid = uid
-  return uid
 end
 
 return M
