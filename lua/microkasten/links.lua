@@ -2,7 +2,7 @@ local M = {}
 
 local useropts = require("microkasten.useropts")
 
-local function find_luapat_at(pat, s, idx)
+local function get_pattern_at(pat, s, idx)
   local pos = 1
   while pos <= #s do
     local start, stop = s:find(pat, pos)
@@ -49,6 +49,17 @@ function M.backlinks_regex(uid)
   return "\\[\\[[^\\n]*" .. uid .. "[^\\n]*\\]\\]"
 end
 
+---@param line string line of note text maybe containing a link
+---@param pos integer char index at which link should be under
+---@return string? link nil if there is no link in the line under the given pos
+function M.get_link_from_line(line, pos)
+  if useropts.get_link_from_line then
+    return useropts.get_link_from_line(line, pos)
+  end
+
+  return get_pattern_at("%[%[..*%]%]", line, pos.col)
+end
+
 ---@param pos? cursor cursor pos
 ---@return string? link link string
 function M.get_link_at(pos)
@@ -62,8 +73,7 @@ function M.get_link_at(pos)
     return nil
   end
 
-  local luapat = (useropts.links or {}).luapat or "%[%[..*%]%]"
-  return find_luapat_at(luapat, line, pos.col)
+  return M.get_link_from_line(line, pos.col)
 end
 
 return M

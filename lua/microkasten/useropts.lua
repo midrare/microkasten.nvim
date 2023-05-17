@@ -15,6 +15,16 @@ M.exts = {}
 ---@type string?
 M.default_ext = nil
 
+--- parse a string into a link
+---@type (fun(link: string): notelink)?
+M.parse_link = nil
+
+--- extract from a line of text, a link at the given char index. returned
+--- string should include all link markup. return nil if there is no link
+--- at the given pos
+---@type (fun(line: string, pos: integer): string?)?
+M.get_link_from_line = nil
+
 --- takes a new note's metadata for and generates the initial note text. if
 --- a table is provided, the keys are lowercase file extensions including the
 --- leading "." and values are the text-generating functions. this
@@ -33,9 +43,5 @@ M.parse_filename = nil
 --- adjusted appropriately.
 ---@type (fun(note: noteinfo): string)?
 M.generate_filename = nil
-
---- parse a string into a link
----@type (fun(link: string): notelink)?
-M.parse_link = nil
 
 return M
