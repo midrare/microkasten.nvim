@@ -57,7 +57,7 @@ function M.get_link_from_line(line, pos)
     return useropts.get_link_from_line(line, pos)
   end
 
-  return get_pattern_at("%[%[..*%]%]", line, pos.col)
+  return get_pattern_at("%[%[..*%]%]", line, pos)
 end
 
 ---@param pos? cursor cursor pos
