@@ -11,7 +11,7 @@ local function resolve_highlights(hlsegs)
   local texts = ""
   local highlights = {}
 
-  local pos = 1
+  local pos = 0  -- for some reason hl range start at 0
   for _, p in ipairs(hlsegs) do
     local text = p[1]
     local hl = p[2]
