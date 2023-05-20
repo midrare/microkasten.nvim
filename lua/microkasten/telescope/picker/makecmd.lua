@@ -54,7 +54,7 @@ function M.make_grep_cmd(opts)
   return vim.tbl_flatten({
     cmd,
     "--color=never",
-    "--no-heading",
+    "--json",
     "--",
     search_paths,
   })

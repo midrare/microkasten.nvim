@@ -20,8 +20,8 @@ function M.put_path(prompt_bufnr)
   local picker = tsstate.get_current_picker(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
   tsactions.close(prompt_bufnr)
-  if entry.path and #entry.path > 0 then
-    vim.api.nvim_put({ entry.path }, "b", false, true)
+  if entry.filename and #entry.filename > 0 then
+    vim.api.nvim_put({ entry.filename }, "b", false, true)
   end
 end
 
@@ -38,14 +38,14 @@ function M.yank_path(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
   local reg = vim.api.nvim_get_vvar("register") or '"'
   tsactions.close(prompt_bufnr)
-  vim.fn.setreg(reg, entry.path)
+  vim.fn.setreg(reg, entry.filename)
 end
 
 function M.open_file(prompt_bufnr)
   local picker = tsstate.get_current_picker(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
   tsactions.close(prompt_bufnr)
-  if entry.path and #entry.path > 0 then
+  if entry.filename and #entry.filename > 0 then
     if winpicker_ok and winpicker then
       local winnr = winpicker.pick_window({
         include_current_win = true,
@@ -59,7 +59,7 @@ function M.open_file(prompt_bufnr)
       vim.api.nvim_set_current_win(winnr)
     end
 
-    vim.cmd("silent! edit! " .. vim.fn.escape(entry.path, " "))
+    vim.cmd("silent! edit! " .. vim.fn.escape(entry.filename, " "))
   end
 end
 
