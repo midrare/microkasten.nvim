@@ -27,11 +27,6 @@ function M.open(opts)
 
   -- TODO allow softcoding tags picker pattern
 
-  table.insert(opts.additional_args, "--only-matching")
-  table.insert(opts.additional_args, "--no-filename")
-  table.insert(opts.additional_args, "--no-line-number")
-  table.insert(opts.additional_args, "--no-messages")
-
   opts.prompt = nil
 
   local patterns = vim.tbl_flatten({ tags.generate_tags_regex() })
@@ -39,10 +34,6 @@ function M.open(opts)
     table.insert(opts.additional_args, "-e")
     table.insert(opts.additional_args, pat)
   end
-
-  table.insert(opts.additional_args, "--only-matching")
-  table.insert(opts.additional_args, "--replace")
-  table.insert(opts.additional_args, "$1$2$3$4$5$6$7$8$9")
 
   opts.entry_maker = opts.entry_maker or entrymaker.tag_entry_maker(opts)
 
