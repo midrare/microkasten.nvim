@@ -13,18 +13,6 @@ function M.open(opts)
   opts = vim.tbl_deep_extend("force", {}, opts or {})
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
 
-  if opts.disable_filename == nil then
-    opts.disable_filename = true
-  end
-
-  if opts.disable_text == nil then
-    opts.disable_text = false
-  end
-
-  if opts.disable_coordinates == nil then
-    opts.disable_coordinates = true
-  end
-
   local finder = tsfinders.new_job(function(prompt)
     ---@diagnostic disable-next-line: redefined-local
     local opts = vim.tbl_deep_extend("force", {}, opts or {})
