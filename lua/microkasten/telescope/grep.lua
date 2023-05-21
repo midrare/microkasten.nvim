@@ -4,8 +4,10 @@ local makecmd = require("microkasten.telescope.picker.makecmd")
 local entrymaker = require("microkasten.telescope.picker.entrymaker")
 local mappings = require("microkasten.telescope.picker.mappings")
 
+local tsactions = require("telescope.actions")
 local tsconfig = require("telescope.config").values
 local tsfinders = require("telescope.finders")
+local tsmakeentry = require("telescope.make_entry")
 local tspickers = require("telescope.pickers")
 local tssorters = require("telescope.sorters")
 
@@ -21,13 +23,16 @@ function M.open(opts)
       return nil
     end
     return makecmd.make_grep_cmd(opts)
-  end, opts.entry_maker or entrymaker.grep_entry_maker(opts), opts.max_results, opts.cwd)
+  end,
+    opts.entry_maker or entrymaker.grep_entry_maker(opts),
+    opts.max_results,
+    opts.cwd)
 
   tspickers
     .new(opts, {
       prompt_title = opts.title or "grep",
       finder = finder,
-      previewer = tsconfig.grep_previewer(opts),
+      previewer = not opts.disable_previewer and tsconfig.grep_previewer(opts) or nil,
       sorter = tssorters.empty(opts),
       attach_mappings = mappings.telescope_mappings,
     })

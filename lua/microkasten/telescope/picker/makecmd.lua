@@ -33,7 +33,8 @@ function M.make_grep_cmd(opts)
   opts = (opts and vim.tbl_deep_extend("force", {}, opts)) or {}
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
 
-  local cmd = opts.vimgrep_arguments or tele_config.vimgrep_arguments
+  local cmd =
+    vim.deepcopy(opts.vimgrep_arguments or tele_config.vimgrep_arguments)
 
   if type(opts.additional_args) == "function" then
     arrays.extend(cmd, opts.additional_args(opts))
@@ -51,13 +52,15 @@ function M.make_grep_cmd(opts)
     arrays.extend(search_paths, opened.get_open_filelist(opts.cwd) or {})
   end
 
-  return vim.tbl_flatten({
+  local foo = vim.tbl_flatten({
     cmd,
     "--color=never",
     "--json",
     "--",
     search_paths,
   })
+
+  return foo
 end
 
 function M.make_listdir_cmd(opts)
