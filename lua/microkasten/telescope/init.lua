@@ -1,9 +1,9 @@
 local M = {}
 
 local entrymaker = require("microkasten.telescope.picker.entrymaker")
-local makecmd = require("microkasten.telescope.picker.makecmd")
+local makecmd = require("microkasten.telescope.makecmd")
 local links = require("microkasten.links")
-local mappings = require("microkasten.telescope.picker.mappings")
+local mappings = require("microkasten.telescope.mappings")
 local arrays = require("microkasten.luamisc.arrays")
 local tags = require("microkasten.tags")
 
