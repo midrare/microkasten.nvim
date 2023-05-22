@@ -3,33 +3,38 @@ local M = {}
 local arrays = require("microkasten.luamisc.arrays")
 local base64 = require("microkasten.luamisc.base64")
 local paths = require("microkasten.luamisc.paths")
+local strings = require("microkasten.luamisc.strings")
+local tables = require("microkasten.luamisc.tables")
 local filenames = require("microkasten.filenames")
 
+local tsstate = require("telescope.state")
 local tsutils = require("telescope.utils")
+
+local elipsis = "\xe2\x80\xa6" -- horizontal elipsis "..."
+
 
 -- NOTE if you want highlights, "display" must be in the original entry
 --  not in the metatable
-local function resolve_highlights(hlsegs)
+
+local function highlights(segs)
   local texts = ""
-  local highlights = {}
+  local hls = {}
 
-  local pos = 0  -- for some reason hl range start at 0
-  for _, p in ipairs(hlsegs) do
-    local text = tostring(p[1])
-    local hl = p[2]
-
-    if hl then
-      table.insert(highlights, { { pos, pos + #text }, hl })
+  -- NOTE hl ranges start at 0 and are measured in bytes
+  local pos = 0
+  for _, seg in ipairs(segs) do
+    if seg.hl then
+      table.insert(hls, { { pos, pos + #seg.text }, seg.hl })
     end
 
-    texts = texts .. text
-    pos = pos + #text
+    texts = texts .. seg.text
+    pos = pos + #seg.text
   end
 
-  return texts, highlights
+  return texts, hls
 end
 
-local function rg_decode(data)
+local function decode(data)
   if data.text then
     return data.text
   end
@@ -37,13 +42,10 @@ local function rg_decode(data)
 end
 
 ---@diagnostic disable-next-line: unused-local
-local function filename_attrs(opts)
+local function fd_attrs(opts)
   return {
     path = function(e)
       return paths.abspath(e.value, e.cwd)
-    end,
-    filestem = function(e)
-      return vim.fn.fnamemodify(e.value, ":r")
     end,
     uid = function(e)
       return e._metadata.uid
@@ -58,14 +60,8 @@ local function filename_attrs(opts)
 end
 
 ---@diagnostic disable-next-line: unused-local
-local function grep_attrs(opts)
+local function ripgrep_attrs(opts)
   return {
-    basename = function(e)
-      return paths.basename(e.filename)
-    end,
-    path = function(e)
-      return paths.abspath(e.filename, e.cwd)
-    end,
     lnum = function(e)
       return e._message.data.line_number
     end,
@@ -75,20 +71,26 @@ local function grep_attrs(opts)
       end
       return e._message.data.submatches[1].start
     end,
-    text = function(e)
-      return e.value
+    basename = function(e)
+      return paths.basename(e.filename)
     end,
+    path = function(e)
+      return paths.abspath(e.filename, e.cwd)
+    end,
+  }
+end
+
+local function ripgrep_file_attrs(opts)
+  local attrs = ripgrep_attrs(opts)
+  tables.merge({
     value = function(e)
-      return rg_decode(e._message.data.lines):gsub("[\r\n]+$", "")
+      return decode(e._message.data.lines):gsub("[\r\n]+$", "")
+    end,
+    text = function(e)
+      return e.value:gsub("^%s+", ""):gsub("%s+$", "")
     end,
     ordinal = function(e)
-      return e.text:gsub("^%s+", ""):gsub("%s+$", "")
-    end,
-    filestem = function(e)
-      return vim.fn.fnamemodify(e.filename, ":r")
-    end,
-    _metadata = function(e)
-      return filenames.parse_filename(e.filename)
+      return e.text
     end,
     uid = function(e)
       return e._metadata.uid
@@ -96,71 +98,31 @@ local function grep_attrs(opts)
     title = function(e)
       return e._metadata.title
     end,
-  }
+    _metadata = function(e)
+      return filenames.parse_filename(e.filename)
+    end,
+  }, attrs)
+  return attrs
 end
 
--- this function is separate from the metatable because highlights don't work
--- unless "display" is in the original entry table
-local function grep_display(opts)
-  return function(e)
-    local segs = {}
-
-    if true or opts.disable_devicons ~= true then
-      local ico, hl = tsutils.get_devicons(e.filename, opts.disable_devicons)
-      if ico and #ico > 0 then
-        table.insert(segs, { ico, opts.icon_hl or hl })
-        table.insert(segs, { " ", nil })
-      end
-    end
-
-    if opts.disable_uid == false then
-      table.insert(segs, { e._metadata.uid, opts.uid_hl or "comment" })
-      table.insert(segs, { " ", nil })
-    end
-
-    if opts.disable_title == false then
-      table.insert(segs, { e._metadata.title, opts.title_hl })
-      table.insert(segs, { " ", nil })
-    end
-
-    if opts.disable_filename == false then
-      local filename = tsutils.transform_path(opts, e.filename)
-      table.insert(segs, { filename, opts.filename_hl })
-      table.insert(segs, { " ", nil })
-    end
-
-    if opts.disable_coordinates == false and e.lnum then
-      table.insert(segs, { e.lnum, opts.coordinates_hl or "comment" })
-      if e.col then
-        table.insert(segs, { ":", opts.coordinates_hl or "comment"  })
-        table.insert(segs, { e.col, opts.coordinates_hl or "comment" })
-      end
-      table.insert(segs, { " ", nil })
-    end
-
-    if opts.disable_text ~= true and e.text then
-      local last_stop = 1
+local function ripgrep_tag_attrs(opts)
+  local attrs = ripgrep_attrs(opts)
+  tables.merge({
+    value = function(e)
+      local matches = {}
       for _, m in ipairs(e._message.data.submatches) do
-        local start = 1 + m["start"]
-        local stop = 1 + m["end"]
-
-        if last_stop < start then
-          table.insert(segs,
-            { e.text:sub(last_stop, start - 1), opts.text_hl or nil })
-        end
-
-        table.insert(segs, { e.text:sub(start, stop - 1),
-          opts.match_hl or "keyword" })
-        last_stop = stop
+        table.insert(matches, decode(m.match))
       end
-
-      if last_stop < #e.text then
-        table.insert(segs, { e.text:sub(last_stop), opts.text_hl or nil })
-      end
-    end
-
-    return resolve_highlights(segs)
-  end
+      return table.concat(matches, " ")
+    end,
+    text = function(e)
+      return e.value
+    end,
+    ordinal = function(e)
+      return e.text
+    end,
+  }, attrs)
+  return attrs
 end
 
 local function set_attrs(tbl, attrs)
@@ -183,6 +145,231 @@ local function set_attrs(tbl, attrs)
   })
 end
 
+local function contiguous(src_text, matches, match_hl)
+  local segs = {}
+
+  local last_stop = 1
+  for _, m in ipairs(matches) do
+    local m_start = 1 + m["start"]
+    local m_stop = 1 + m["end"]
+
+    if last_stop < m_start then
+      local pre_text = strings.sub(src_text, last_stop, m_start - 1)
+      table.insert(segs, { text = pre_text, elidable = true })
+    end
+
+    local m_text = strings.sub(src_text, m_start, m_stop - 1)
+    table.insert(segs,
+      { text = m_text, elidable = false, hl = match_hl or "keyword" })
+
+    last_stop = m_stop
+  end
+
+  if last_stop < strings.len(src_text) then
+    local post_text = strings.sub(src_text, last_stop)
+    table.insert(segs, { text = post_text, elidable = true })
+  end
+
+  return segs
+end
+
+local function strip_ends(segs)
+  if #segs <= 0 then
+    return
+  end
+
+  local count = 0
+
+  if segs[#segs].elidable then
+    segs[#segs].text, count = segs[#segs].text:gsub("%s+$", "")
+    if count > 0 then
+      segs[#segs]._text_len = nil
+    end
+    if #segs[#segs].text <= 0 then
+      table.remove(segs, #segs)
+    end
+  end
+
+  if segs[1].elidable then
+    segs[1].text, count = segs[1].text:gsub("^%s+", "")
+    if count > 0 then
+      segs[1]._text_len = nil
+    end
+    if #segs[1].text <= 0 then
+      table.remove(segs, 1)
+    end
+  end
+end
+
+local function elidable_len(segs, remainder)
+  local last_len = 0
+  for i, seg in ipairs(segs) do
+    seg._text_len = seg._text_len or strings.len(seg.text)
+    local distrib_num = #segs - i + 1
+    local distrib_sum = (seg._text_len - last_len) * distrib_num
+    if remainder >= distrib_sum then
+      remainder = remainder - distrib_sum
+    else
+      local distrib_len = math.floor(remainder / distrib_num)
+      local context_len = last_len + distrib_len
+      remainder = remainder - (distrib_len * distrib_num)
+      return context_len, remainder
+    end
+    last_len = seg._text_len
+  end
+
+  return math.max(last_len, remainder), 0
+end
+
+
+local function elide(segs, max_len)
+  arrays.apply(segs, function(seg)
+    seg._text_len = seg._text_len or strings.len(seg.text)
+  end)
+
+  local fixed_len = arrays.sum(segs, function(seg)
+    return not seg.elidable and seg._text_len or 0
+  end)
+
+  local available = max_len - fixed_len
+  if available < 0 then
+    return false
+  end
+
+  local elidables = arrays.get_if(segs, function(s) return s.elidable end)
+  table.sort(elidables, function(a, b) return a._text_len < b._text_len end)
+  local max_elidable_len, remainder = elidable_len(elidables, available)
+
+  assert(not segs[1]._first)
+  assert(not segs[#segs]._last)
+  segs[1]._first = true
+  segs[#segs]._last = true
+
+  for _, seg in ipairs(elidables) do
+    if seg._text_len > max_elidable_len and seg._text_len > 1 then
+      local extra = (seg._text_len > max_elidable_len + 1 and remainder > 0) and 1 or 0
+      remainder = remainder - extra
+      local allotted = max_elidable_len + extra
+
+      if seg._first then
+        seg.text = elipsis .. strings.sub(seg.text, -(allotted - 1))
+        seg._text_len = nil
+      elseif seg._last then
+        seg.text = strings.sub(seg.text, 1, allotted - 1) .. elipsis
+        seg._text_len = nil
+      else
+        seg.text = strings.sub(seg.text, 1, math.ceil(allotted / 2) - 1)
+          .. elipsis .. seg.text:sub(-math.floor(allotted / 2))
+        seg._text_len = nil
+      end
+    end
+  end
+
+  segs[1]._first = nil
+  segs[#segs]._last = nil
+
+  return true
+end
+
+local function get_win_width()
+  local status = tsstate.get_status(vim.api.nvim_get_current_buf())
+  return vim.api.nvim_win_get_width(status.results_win)
+    - status.picker.selection_caret:len() - 2
+end
+
+
+-- this function is separate from the metatable because highlights don't work
+-- unless "display" is in the original entry table
+local function ripgrep_file_display(opts)
+  local win_width = nil
+  return function(e)
+    local segs = {}
+    win_width = win_width or get_win_width()
+
+    if true or opts.disable_devicons ~= true then
+      local ico, hl = tsutils.get_devicons(e.filename, opts.disable_devicons)
+      if ico and #ico > 0 then
+        table.insert(segs, { text = ico, hl = opts.icon_hl or hl })
+        table.insert(segs, { text = " " })
+      end
+    end
+
+    if opts.disable_uid == false then
+      table.insert(segs, { text = e._metadata.uid, hl = opts.uid_hl or "comment" })
+      table.insert(segs, { text = " " })
+    end
+
+    if opts.disable_title == false then
+      table.insert(segs, { text = e._metadata.title, hl = opts.title_hl })
+      table.insert(segs, { text = " " })
+    end
+
+    if opts.disable_filename == false then
+      local filename = tsutils.transform_path(opts, e.filename)
+      table.insert(segs, { text = filename, hl = opts.filename_hl })
+      table.insert(segs, { text = " " })
+    end
+
+    if opts.disable_coordinates == false and e.lnum then
+      table.insert(segs, { text = tostring(e.lnum), hl = opts.coordinates_hl or "comment" })
+      if e.col then
+        table.insert(segs, { text = ":", hl = opts.coordinates_hl or "comment"  })
+        table.insert(segs, { text = tostring(e.col), hl = opts.coordinates_hl or "comment" })
+      end
+      table.insert(segs, { text = " " })
+    end
+
+    if opts.disable_text ~= true and e.text then
+      local match_segs = contiguous(e.text, e._message.data.submatches)
+
+      if opts.disable_elision ~= true then
+        local req_width = arrays.sum(match_segs, function(seg)
+          seg._text_len = seg._text_len or strings.len(seg.text)
+          if seg.elidable and seg._text_len > 0 then
+            return 1
+          end
+          return seg._text_len
+        end)
+
+        strip_ends(match_segs)
+
+        local elided_width = math.ceil(req_width / win_width) * win_width
+        elide(match_segs, elided_width)
+      end
+
+      arrays.extend(segs, match_segs)
+    end
+
+    return highlights(segs)
+  end
+end
+
+local function ripgrep_entry_maker(opts, make_attrs)
+  opts = vim.tbl_deep_extend("force", {}, opts or {})
+
+  local filename = nil
+  return function(msg)
+    msg = vim.fn.json_decode(msg)
+    if not msg then
+      return nil
+    end
+
+    if msg.type == "begin" then
+      filename = decode(msg.data.path)
+    elseif msg.type == "match" then
+      if not filename then
+        return nil
+      end
+
+      return make_attrs(msg, filename)
+    elseif msg.type == "end" then
+      filename = nil
+    end
+
+    return nil
+  end
+end
+
 function M.filename_entry_maker(opts)
   return function(filename)
     return set_attrs({
@@ -195,94 +382,68 @@ function M.filename_entry_maker(opts)
 
         local icon, icon_hl = tsutils.get_devicons(e.value, opts.disable_devicons)
         if icon and icon_hl then
-          table.insert(segs, { icon, icon_hl })
-          table.insert(segs, { " ", nil })
+          table.insert(segs, { text = icon, hl = icon_hl })
+          table.insert(segs, { text = " " })
         end
 
-        if not opts.disable_uid and e.uid and #e.uid > 0 then
-          table.insert(segs, { e.uid, "@comment" })
-          table.insert(segs, { " ", nil })
+        if opts.disable_uid == false and e.uid and #e.uid > 0 then
+          table.insert(segs, { text = e.uid, hl = "comment" })
+          table.insert(segs, { text = " " })
         end
 
-        table.insert(segs, { e.title, nil })
+        table.insert(segs, { text = e.title })
 
-        return resolve_highlights(segs)
+        return highlights(segs)
       end,
-    }, filename_attrs(opts))
+    }, fd_attrs(opts))
   end
 end
 
 function M.tag_entry_maker(opts)
+  opts = vim.tbl_deep_extend("force", {}, opts or {})
   local function display(e)
     local segs = {}
 
     if not opts.disable_devicons then
-      table.insert(segs, { "󰓹 ", nil })
+      table.insert(segs, { text = "󰓹 " })
     end
+    table.insert(segs, { text = e.value })
 
-    table.insert(segs, { e.value, nil })
-
-    return resolve_highlights(segs)
+    return highlights(segs)
   end
 
-  local seen = {}
-
-  return function(tag)
-    if seen[tag] then
-      return nil
-    end
-    seen[tag] = true
-
-    return {
+  return ripgrep_entry_maker(opts, function(msg, filename)
+    return set_attrs({
       cwd = opts.cwd,
       display = display,
-      ordinal = tag,
-      value = tag,
-    }
-  end
+      filename = filename,
+      _message = msg,
+    }, ripgrep_tag_attrs(opts))
+  end)
 end
 
 function M.backlink_entry_maker(opts)
   opts = vim.tbl_deep_extend("force", {}, opts or {})
-
-  return function(match)
+  return ripgrep_entry_maker(opts, function(msg, filename)
     return set_attrs({
       cwd = opts.cwd,
-      display = grep_display(opts),
-      value = match,
-    }, grep_attrs(opts))
-  end
+      display = ripgrep_file_display(opts),
+      filename = filename,
+      _message = msg,
+    }, ripgrep_file_attrs(opts))
+  end)
 end
 
 function M.grep_entry_maker(opts)
   opts = vim.tbl_deep_extend("force", {}, opts or {})
-
-  local filename = nil
-  return function(line)
-    local msg = vim.fn.json_decode(line)
-    if not msg then
-      return nil
-    end
-
-    if msg.type == "begin" then
-      filename = rg_decode(msg.data.path)
-    elseif msg.type == "match" then
-      if not filename then
-        return nil
-      end
-
-      return set_attrs({
-        cwd = opts.cwd,
-        display = grep_display(opts),
-        filename = filename,
-        _message = msg,
-      }, grep_attrs(opts))
-    elseif msg.type == "end" then
-      filename = nil
-    end
-
-    return nil
-  end
+  return ripgrep_entry_maker(opts, function(msg, filename)
+    return set_attrs({
+      cwd = opts.cwd,
+      display = ripgrep_file_display(opts),
+      filename = filename,
+      _message = msg,
+    }, ripgrep_file_attrs(opts))
+  end)
 end
 
 return M
