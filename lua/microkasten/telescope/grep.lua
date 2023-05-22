@@ -24,7 +24,7 @@ function M.open(opts)
     end
     return makecmd.make_grep_cmd(opts)
   end,
-    opts.entry_maker or entrymaker.grep_entry_maker(opts),
+    opts.entry_maker or entrymaker.ripgrep_entry_maker(opts),
     opts.max_results,
     opts.cwd)
 

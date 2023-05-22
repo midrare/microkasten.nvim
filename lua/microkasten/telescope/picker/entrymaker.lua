@@ -456,7 +456,7 @@ function M.backlink_entry_maker(opts)
   end)
 end
 
-function M.grep_entry_maker(opts)
+function M.ripgrep_entry_maker(opts)
   opts = vim.tbl_deep_extend("force", {}, opts or {})
   return ripgrep_entry_maker(opts, function(msg)
     local entry = {
