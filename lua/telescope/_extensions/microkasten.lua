@@ -7,13 +7,13 @@ local user_opts = vim.tbl_deep_extend("force", {}, default_opts)
 local function pick_filename(opts)
   opts = vim.tbl_deep_extend("force", user_opts, opts or {})
   opts.cwd = opts.cwd or vim.fn.getcwd(-1, -1)
-  pickers.filenames.open(opts)
+  pickers.filenames(opts)
 end
 
 local function pick_tag(opts)
   opts = vim.tbl_deep_extend("force", user_opts, opts or {})
   opts.cwd = opts.cwd or vim.fn.getcwd(-1, -1)
-  pickers.tags.open(opts)
+  pickers.tags(opts)
 end
 
 local function pick_backlink(opts)
@@ -25,14 +25,14 @@ local function pick_backlink(opts)
     opts.uid = note and note.uid or nil
   end
   if opts.uid and #opts.uid > 0 then
-    pickers.backlinks.open(opts)
+    pickers.backlinks(opts)
   end
 end
 
 local function pick_grep(opts)
   opts = vim.tbl_deep_extend("force", user_opts, opts or {})
   opts.cwd = opts.cwd or vim.fn.getcwd(-1, -1)
-  pickers.grep.open(opts)
+  pickers.grep(opts)
 end
 
 return require("telescope").register_extension({
