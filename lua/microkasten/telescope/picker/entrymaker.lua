@@ -34,6 +34,8 @@ local function highlights(segs)
   return texts, hls
 end
 
+---@param data { text: string } | { bytes: string }
+---@return string decoded decoded string
 local function decode(data)
   if data.text then
     return data.text
@@ -42,19 +44,28 @@ local function decode(data)
 end
 
 ---@diagnostic disable-next-line: unused-local
-local function fd_attrs(opts)
+local function file_attrs(opts)
   return {
     path = function(e)
-      return paths.abspath(e.value, e.cwd)
+      return paths.abspath(e.filename, e.cwd)
     end,
+    basename = function(e)
+      return paths.basename(e.filename)
+    end,
+  }
+end
+
+---@diagnostic disable-next-line: unused-local
+local function note_attrs(opts)
+  return {
     uid = function(e)
-      return e._metadata.uid
+      return e._note.uid
     end,
     title = function(e)
-      return e._metadata.title
+      return e._note.title
     end,
-    _metadata = function(e)
-      return filenames.parse_filename(e.value)
+    _note = function(e)
+      return filenames.parse_filename(e.filename)
     end,
   }
 end
@@ -62,6 +73,9 @@ end
 ---@diagnostic disable-next-line: unused-local
 local function ripgrep_attrs(opts)
   return {
+    filename = function(e)
+      return decode(e._message.data.path)
+    end,
     lnum = function(e)
       return e._message.data.line_number
     end,
@@ -71,18 +85,12 @@ local function ripgrep_attrs(opts)
       end
       return e._message.data.submatches[1].start
     end,
-    basename = function(e)
-      return paths.basename(e.filename)
-    end,
-    path = function(e)
-      return paths.abspath(e.filename, e.cwd)
-    end,
   }
 end
 
-local function ripgrep_file_attrs(opts)
-  local attrs = ripgrep_attrs(opts)
-  tables.merge({
+---@diagnostic disable-next-line: unused-local
+local function ripgrep_text_attrs(opts)
+  return {
     value = function(e)
       return decode(e._message.data.lines):gsub("[\r\n]+$", "")
     end,
@@ -92,22 +100,13 @@ local function ripgrep_file_attrs(opts)
     ordinal = function(e)
       return e.text
     end,
-    uid = function(e)
-      return e._metadata.uid
-    end,
-    title = function(e)
-      return e._metadata.title
-    end,
-    _metadata = function(e)
-      return filenames.parse_filename(e.filename)
-    end,
-  }, attrs)
-  return attrs
+  }
 end
 
+---@diagnostic disable-next-line: unused-local
 local function ripgrep_tag_attrs(opts)
-  local attrs = ripgrep_attrs(opts)
-  tables.merge({
+  local seen = {}
+  return {
     value = function(e)
       local matches = {}
       for _, m in ipairs(e._message.data.submatches) do
@@ -121,11 +120,18 @@ local function ripgrep_tag_attrs(opts)
     ordinal = function(e)
       return e.text
     end,
-  }, attrs)
-  return attrs
+    valid = function(e)
+      if seen[e.value] then
+        return false
+      end
+
+      seen[e.value] = true
+      return true
+    end,
+  }
 end
 
-local function set_attrs(tbl, attrs)
+local function set_lazy_attrs(tbl, metaattrs)
   return setmetatable(tbl, {
     __index = function(e, key)
       local raw = rawget(e, key)
@@ -133,7 +139,7 @@ local function set_attrs(tbl, attrs)
         return raw
       end
 
-      local make_value = rawget(attrs, key)
+      local make_value = rawget(metaattrs, key)
       if make_value then
         local value = make_value(e)
         rawset(e, key, value)
@@ -295,12 +301,12 @@ local function ripgrep_file_display(opts)
     end
 
     if opts.disable_uid == false then
-      table.insert(segs, { text = e._metadata.uid, hl = opts.uid_hl or "comment" })
+      table.insert(segs, { text = e.uid, hl = opts.uid_hl or "comment" })
       table.insert(segs, { text = " " })
     end
 
     if opts.disable_title == false then
-      table.insert(segs, { text = e._metadata.title, hl = opts.title_hl })
+      table.insert(segs, { text = e.title, hl = opts.title_hl })
       table.insert(segs, { text = " " })
     end
 
@@ -361,7 +367,10 @@ local function ripgrep_entry_maker(opts, make_attrs)
         return nil
       end
 
-      return make_attrs(msg, filename)
+      msg.data.path.text = filename
+      msg.data.path.bytes = nil
+
+      return make_attrs(msg)
     elseif msg.type == "end" then
       filename = nil
     end
@@ -372,7 +381,7 @@ end
 
 function M.filename_entry_maker(opts)
   return function(filename)
-    return set_attrs({
+    local entry = {
       cwd = opts.cwd,
       ordinal = filename,
       value = filename,
@@ -395,7 +404,13 @@ function M.filename_entry_maker(opts)
 
         return highlights(segs)
       end,
-    }, fd_attrs(opts))
+    }
+
+    local attrs = {}
+    tables.merge(file_attrs(opts), attrs)
+    tables.merge(note_attrs(opts), attrs)
+
+    return set_lazy_attrs(entry, attrs)
   end
 end
 
@@ -412,37 +427,51 @@ function M.tag_entry_maker(opts)
     return highlights(segs)
   end
 
-  return ripgrep_entry_maker(opts, function(msg, filename)
-    return set_attrs({
-      cwd = opts.cwd,
-      display = display,
-      filename = filename,
-      _message = msg,
-    }, ripgrep_tag_attrs(opts))
+  return ripgrep_entry_maker(opts, function(msg)
+    local entry = { cwd = opts.cwd, display = display, _message = msg }
+
+    local attrs = ripgrep_attrs(opts)
+    tables.merge(ripgrep_tag_attrs(opts), attrs)
+
+    return set_lazy_attrs(entry, attrs)
   end)
 end
 
 function M.backlink_entry_maker(opts)
   opts = vim.tbl_deep_extend("force", {}, opts or {})
-  return ripgrep_entry_maker(opts, function(msg, filename)
-    return set_attrs({
+  return ripgrep_entry_maker(opts, function(msg)
+    local entry = {
       cwd = opts.cwd,
       display = ripgrep_file_display(opts),
-      filename = filename,
       _message = msg,
-    }, ripgrep_file_attrs(opts))
+    }
+
+    local attrs = {}
+    tables.merge(file_attrs(opts), attrs)
+    tables.merge(note_attrs(opts), attrs)
+    tables.merge(ripgrep_attrs(opts), attrs)
+    tables.merge(ripgrep_text_attrs(opts), attrs)
+
+    return set_lazy_attrs(entry, attrs)
   end)
 end
 
 function M.grep_entry_maker(opts)
   opts = vim.tbl_deep_extend("force", {}, opts or {})
-  return ripgrep_entry_maker(opts, function(msg, filename)
-    return set_attrs({
+  return ripgrep_entry_maker(opts, function(msg)
+    local entry = {
       cwd = opts.cwd,
       display = ripgrep_file_display(opts),
-      filename = filename,
       _message = msg,
-    }, ripgrep_file_attrs(opts))
+    }
+
+    local attrs = {}
+    tables.merge(file_attrs(opts), attrs)
+    tables.merge(note_attrs(opts), attrs)
+    tables.merge(ripgrep_attrs(opts), attrs)
+    tables.merge(ripgrep_text_attrs(opts), attrs)
+
+    return set_lazy_attrs(entry, attrs)
   end)
 end
 
