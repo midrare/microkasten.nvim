@@ -15,7 +15,8 @@ function M.open(opts)
   opts.additional_args = opts.additional_args or {}
 
   if not opts.vimgrep_arguments or #opts.vimgrep_arguments <= 0 then
-    opts.vimgrep_arguments = vim.tbl_deep_extend("force", {}, tsconfig.vimgrep_arguments)
+    opts.vimgrep_arguments =
+      vim.tbl_deep_extend("force", {}, tsconfig.vimgrep_arguments)
     arrays.remove(opts.vimgrep_arguments, "-H")
     arrays.remove(opts.vimgrep_arguments, "--with-filename")
     arrays.remove(opts.vimgrep_arguments, "-h")

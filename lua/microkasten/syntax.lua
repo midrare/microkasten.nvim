@@ -7,7 +7,10 @@ function M.apply_syntax()
     useropts.apply_syntax()
     return
   end
-  vim.cmd("syntax region String matchgroup=String" .. " start=/\\[\\[/ skip=/[^\\[\\]]/ end=/\\]\\]/ display oneline")
+  vim.cmd(
+    "syntax region String matchgroup=String"
+      .. " start=/\\[\\[/ skip=/[^\\[\\]]/ end=/\\]\\]/ display oneline"
+  )
   vim.cmd([[syntax match String "\v#[a-zA-Z]+[a-zA-Z0-9\\-_]*"]])
 end
 

@@ -12,7 +12,6 @@ local tsutils = require("telescope.utils")
 
 local elipsis = "\xe2\x80\xa6" -- horizontal elipsis "..."
 
-
 -- NOTE if you want highlights, "display" must be in the original entry
 --  not in the metatable
 
@@ -165,8 +164,10 @@ local function contiguous(src_text, matches, match_hl)
     end
 
     local m_text = strings.sub(src_text, m_start, m_stop - 1)
-    table.insert(segs,
-      { text = m_text, elidable = false, hl = match_hl or "keyword" })
+    table.insert(
+      segs,
+      { text = m_text, elidable = false, hl = match_hl or "keyword" }
+    )
 
     last_stop = m_stop
   end
@@ -227,7 +228,6 @@ local function elidable_len(segs, remainder)
   return math.max(last_len, remainder), 0
 end
 
-
 local function elide(segs, max_len)
   arrays.apply(segs, function(seg)
     seg._text_len = seg._text_len or strings.len(seg.text)
@@ -242,8 +242,12 @@ local function elide(segs, max_len)
     return false
   end
 
-  local elidables = arrays.get_if(segs, function(s) return s.elidable end)
-  table.sort(elidables, function(a, b) return a._text_len < b._text_len end)
+  local elidables = arrays.get_if(segs, function(s)
+    return s.elidable
+  end)
+  table.sort(elidables, function(a, b)
+    return a._text_len < b._text_len
+  end)
   local max_elidable_len, remainder = elidable_len(elidables, available)
 
   assert(not segs[1]._first)
@@ -253,7 +257,9 @@ local function elide(segs, max_len)
 
   for _, seg in ipairs(elidables) do
     if seg._text_len > max_elidable_len and seg._text_len > 1 then
-      local extra = (seg._text_len > max_elidable_len + 1 and remainder > 0) and 1 or 0
+      local extra = (seg._text_len > max_elidable_len + 1 and remainder > 0)
+          and 1
+        or 0
       remainder = remainder - extra
       local allotted = max_elidable_len + extra
 
@@ -265,7 +271,8 @@ local function elide(segs, max_len)
         seg._text_len = nil
       else
         seg.text = strings.sub(seg.text, 1, math.ceil(allotted / 2) - 1)
-          .. elipsis .. seg.text:sub(-math.floor(allotted / 2))
+          .. elipsis
+          .. seg.text:sub(-math.floor(allotted / 2))
         seg._text_len = nil
       end
     end
@@ -280,9 +287,9 @@ end
 local function get_win_width()
   local status = tsstate.get_status(vim.api.nvim_get_current_buf())
   return vim.api.nvim_win_get_width(status.results_win)
-    - status.picker.selection_caret:len() - 2
+    - status.picker.selection_caret:len()
+    - 2
 end
-
 
 -- this function is separate from the metatable because highlights don't work
 -- unless "display" is in the original entry table
@@ -317,10 +324,19 @@ local function ripgrep_file_display(opts)
     end
 
     if opts.disable_coordinates == false and e.lnum then
-      table.insert(segs, { text = tostring(e.lnum), hl = opts.coordinates_hl or "comment" })
+      table.insert(
+        segs,
+        { text = tostring(e.lnum), hl = opts.coordinates_hl or "comment" }
+      )
       if e.col then
-        table.insert(segs, { text = ":", hl = opts.coordinates_hl or "comment"  })
-        table.insert(segs, { text = tostring(e.col), hl = opts.coordinates_hl or "comment" })
+        table.insert(
+          segs,
+          { text = ":", hl = opts.coordinates_hl or "comment" }
+        )
+        table.insert(
+          segs,
+          { text = tostring(e.col), hl = opts.coordinates_hl or "comment" }
+        )
       end
       table.insert(segs, { text = " " })
     end
@@ -389,7 +405,8 @@ function M.filename_entry_maker(opts)
       display = function(e)
         local segs = {}
 
-        local icon, icon_hl = tsutils.get_devicons(e.value, opts.disable_devicons)
+        local icon, icon_hl =
+          tsutils.get_devicons(e.value, opts.disable_devicons)
         if icon and icon_hl then
           table.insert(segs, { text = icon, hl = icon_hl })
           table.insert(segs, { text = " " })
