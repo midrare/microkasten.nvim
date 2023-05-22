@@ -25,4 +25,5 @@
 --exclude=*/release/*
 --exclude=*/vcpkg/*
 --exclude=*/vcpkg_installed/*
+--exclude=*/luamisc/*
 --exclude=*/luaunit.lua
