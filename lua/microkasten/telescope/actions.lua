@@ -63,10 +63,4 @@ function M.open_file(prompt_bufnr)
   end
 end
 
-function M.close(prompt_bufnr)
-  local picker = tsstate.get_current_picker(prompt_bufnr)
-  local entry = tsstate.get_selected_entry()
-  tsactions.close(prompt_bufnr)
-end
-
 return tsmt.transform_mod(M)

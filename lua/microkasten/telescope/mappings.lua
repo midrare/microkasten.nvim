@@ -9,8 +9,8 @@ function M.telescope_mappings(_, map)
   map("i", "<c-i>", actions.put_uid)
   map("n", "<c-y>", actions.yank_uid)
   map("n", "<c-i>", actions.put_uid)
-  map("n", "<c-c>", actions.close)
-  map("n", "<esc>", actions.close)
+  map("n", "<c-c>", tsactions.close)
+  map("n", "<esc>", tsactions.close)
   return true
 end
 
