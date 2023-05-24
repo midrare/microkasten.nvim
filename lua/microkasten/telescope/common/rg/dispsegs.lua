@@ -106,7 +106,7 @@ local function to_segs(matches, match_hl)
 
     if m.start <= m.stop then
       local text = strings.sub(m.src, m.start, m.stop):gsub("[\n\r]+", " ")
-      table.insert(segs, { text = text, elidable = false, hl = match_hl })
+      table.insert(segs, { text = text, hl = match_hl })
     end
 
     pos = m.stop + 1

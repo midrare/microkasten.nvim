@@ -83,23 +83,15 @@ function M.elide(segs, max_len)
     return false
   end
 
-  local elidables = arrays.get_if(segs, function(s)
-    return s.elidable
-  end)
-  table.sort(elidables, function(a, b)
-    return a._text_len < b._text_len
-  end)
+  local elidables = arrays.get_if(segs, function(s) return s.elidable end)
+  table.sort(elidables, function(a, b) return a._text_len < b._text_len end)
   local max_elidable_len, remainder = elidable_len(elidables, available)
 
-  -- TODO need cleaner, non-mutating way of marking first and last text segment
 
-  ---@diagnostic disable-next-line: undefined-field
-  assert(not segs[1]._first)
-  ---@diagnostic disable-next-line: undefined-field
-  assert(not segs[#segs]._last)
+  -- TODO fix eliding for file-granularity rg entries
 
-  segs[1]._first = true
-  segs[#segs]._last = true
+  local first = segs[1]
+  local last = segs[#segs]
 
   for _, seg in ipairs(elidables) do
     if seg._text_len > max_elidable_len and seg._text_len > 1 then
@@ -110,24 +102,25 @@ function M.elide(segs, max_len)
       local allotted = max_elidable_len + extra
 
       assert(seg.text, "segment must have text")
-      local seg_text = seg.text
-      if seg._first then
-        seg.text = elipsis .. strings.sub(seg_text, -(allotted - 1))
+
+      -- this works because lua eq operator is identity-based
+      if seg == first then
+        seg.text = (elipsis .. strings.sub(seg.text, -(allotted - 1)))
         seg._text_len = nil
-      elseif seg._last then
-        seg.text = strings.sub(seg_text, 1, allotted - 1) .. elipsis
+      end
+      if seg == last then
+        seg.text = (strings.sub(seg.text, 1, allotted - 1) .. elipsis)
         seg._text_len = nil
-      else
-        seg.text = strings.sub(seg_text, 1, math.ceil(allotted / 2) - 1)
+      end
+
+      if seg ~= first and seg ~= last then
+        seg.text = (strings.sub(seg.text, 1, math.ceil(allotted / 2) - 1)
           .. elipsis
-          .. seg_text:sub(-math.floor(allotted / 2))
+          .. seg.text:sub(-math.floor(allotted / 2)))
         seg._text_len = nil
       end
     end
   end
-
-  segs[1]._first = nil
-  segs[#segs]._last = nil
 
   return true
 end
