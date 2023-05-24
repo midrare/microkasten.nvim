@@ -89,7 +89,6 @@ end
 
 local function make_finder(opts, attrs)
   opts = opts and vim.deepcopy(opts) or {}
-  opts.batch = rgjob.frequency.file
 
   opts.command_generator = function(prompt)
     ---@diagnostic disable-next-line: redefined-local
