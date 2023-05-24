@@ -9,8 +9,9 @@ function M.get_open_filelist(cwd)
     end
     return true
   end, vim.api.nvim_list_bufs())
+
   if not next(bufnrs) then
-    return
+    return {}
   end
 
   local filelist = {}

@@ -8,6 +8,7 @@ local winpicker_ok, winpicker = pcall(require, "window-picker")
 winpicker = winpicker_ok and winpicker or nil
 
 function M.put_uid(prompt_bufnr)
+  ---@diagnostic disable-next-line: unused-local
   local picker = tsstate.get_current_picker(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
   tsactions.close(prompt_bufnr)
@@ -17,6 +18,7 @@ function M.put_uid(prompt_bufnr)
 end
 
 function M.put_path(prompt_bufnr)
+  ---@diagnostic disable-next-line: unused-local
   local picker = tsstate.get_current_picker(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
   tsactions.close(prompt_bufnr)
@@ -26,6 +28,7 @@ function M.put_path(prompt_bufnr)
 end
 
 function M.yank_uid(prompt_bufnr)
+  ---@diagnostic disable-next-line: unused-local
   local picker = tsstate.get_current_picker(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
   local reg = vim.api.nvim_get_vvar("register") or '"'
@@ -34,6 +37,7 @@ function M.yank_uid(prompt_bufnr)
 end
 
 function M.yank_path(prompt_bufnr)
+  ---@diagnostic disable-next-line: unused-local
   local picker = tsstate.get_current_picker(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
   local reg = vim.api.nvim_get_vvar("register") or '"'
@@ -42,6 +46,7 @@ function M.yank_path(prompt_bufnr)
 end
 
 function M.open_file(prompt_bufnr)
+  ---@diagnostic disable-next-line: unused-local
   local picker = tsstate.get_current_picker(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
   tsactions.close(prompt_bufnr)
