@@ -13,6 +13,24 @@ local syntax = require("microkasten.syntax")
 local useropts = require("microkasten.useropts")
 local util = require("microkasten.util")
 
+
+local function is_has_marker(dirname)
+  while dirname and #dirname > 0 do
+    local marker = paths.join(dirname, useropts.marker or ".microkasten")
+    if vim.fn.filereadable(marker) > 0 then
+      return true
+    end
+
+    local next = paths.dirname(dirname)
+    if next == dirname then
+      break
+    end
+    dirname = next
+  end
+
+  return false
+end
+
 function M._run_hook(hook)
   local type_ = type(hook)
   if type_ == "table" then
@@ -25,6 +43,31 @@ function M._run_hook(hook)
 end
 
 function M._on_attach()
+  if vim.b._microkasten_attached then
+    return
+  end
+
+  local ext = vim.fn.expand("%:e"):lower()
+  if ext and #ext > 0 then
+    local pats = formats.exts()
+    if not vim.tbl_contains(pats, "." .. ext:lower()) then
+      return
+    end
+  end
+
+  if useropts.marker ~= false then
+    local filename = vim.fn.expand("%:p")
+    local dirname = paths.dirname(filename)
+    if not dirname or #dirname < 0 then
+      dirname = vim.loop.cwd()
+    end
+
+    if dirname and #dirname > 0 and not is_has_marker(dirname) then
+      return
+    end
+  end
+
+  vim.b._microkasten_attached = true
   syntax.apply_syntax()
   M._run_hook(useropts.on_attach)
 end
@@ -33,24 +76,10 @@ local function init_autocmds()
   vim.cmd("augroup microkasten_syntax")
   vim.cmd("autocmd!")
 
-  local pats = formats.exts()
-  arrays.transform(pats, function(s)
-    return "*" .. s
-  end)
-  local exts_pat = table.concat(pats, ",")
-
-  if exts_pat and #exts_pat > 0 then
-    local cmd = ([[
-      autocmd BufEnter,BufRead,BufNewFile {EXTS} lua
-      \ do
-      \   local microkasten_ok, microkasten = pcall(require, "microkasten")
-      \   if microkasten_ok and microkasten then
-      \     microkasten._on_attach()
-      \   end
-      \ end
-    ]]):gsub("{EXTS}", exts_pat)
-    vim.cmd(cmd)
-  end
+  vim.cmd [[
+    autocmd BufEnter,BufRead,BufNewFile *
+    \ lua require("microkasten")._on_attach()
+  ]]
 
   vim.cmd("augroup END")
 end

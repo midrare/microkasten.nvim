@@ -5,6 +5,11 @@ local M = {}
 ---@type (fun()|fun()[])?
 M.on_attach = nil
 
+--- if a file with this name exists in the current or a parent folder then
+--- the current buffer is considered a note file
+---@type nil|boolean|string
+M.marker = ".microkasten"
+
 --- file extensions supported. used for filetype detection. should be
 --- lowercase and including leading "."
 ---@type string[]?
