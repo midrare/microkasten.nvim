@@ -22,7 +22,7 @@ end
 ---@param note noteinfo note metadata
 ---@return string filename constructed filename
 function M.generate_filename(note)
-  note = vim.deepcopy(note or {})
+  note = note and vim.deepcopy(note) or {}
   note.ext = paths.canonical_ext(note.ext) or formats.default_ext()
 
   if useropts.generate_filename then
