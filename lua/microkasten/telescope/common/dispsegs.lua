@@ -19,9 +19,8 @@ function M.strip(segs)
     return
   end
 
-  local count = 0
-
-  if segs[#segs].elidable then
+  if segs[#segs] and segs[#segs].elidable then
+    local count = 0
     segs[#segs].text, count = segs[#segs].text:gsub("%s+$", "")
     if count > 0 then
       segs[#segs]._text_len = nil
@@ -31,7 +30,8 @@ function M.strip(segs)
     end
   end
 
-  if segs[1].elidable then
+  if segs[1] and segs[1].elidable then
+    local count = 0
     segs[1].text, count = segs[1].text:gsub("^%s+", "")
     if count > 0 then
       segs[1]._text_len = nil
@@ -66,6 +66,10 @@ end
 ---@param max_len integer
 ---@return boolean is_success
 function M.elide(segs, max_len)
+  if #segs <= 0 then
+    return true
+  end
+
   arrays.apply(segs, function(seg)
     seg._text_len = seg._text_len or (seg.text and strings.len(seg.text) or 0)
   end)

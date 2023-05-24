@@ -4,11 +4,9 @@ local paths = require("microkasten.luamisc.paths")
 
 local filenames = require("microkasten.filenames")
 
-local rgutil = require("microkasten.telescope.common.rg.util")
-
 M.filename_attrs = {
   filename = function(e)
-    return rgutil.decode(e._message.data.path)
+    return e._event.filename
   end,
   path = function(e)
     return paths.abspath(e.filename, e.cwd)
@@ -26,26 +24,24 @@ M.filename_attrs = {
 
 M.coordinate_attrs = {
   lnum = function(e)
-    return e._message.data.line_number
+    return e._event.lnum
   end,
   col = function(e)
-    if not e._message.data.submatches[1] then
-      return nil
-    end
-    return e._message.data.submatches[1].start
+    return e._event.col
   end,
 }
 
 M.tag_attrs = {
   value = function(e)
-    local matches = {}
-    for _, m in ipairs(e._message.data.submatches) do
-      table.insert(matches, rgutil.decode(m.match))
+    local srcs = {}
+    for _, m in ipairs(e._event.matches) do
+      local s = m.src:gsub("^%s+", ""):gsub("%s+$", "")
+      table.insert(srcs, s)
     end
-    return table.concat(matches, " ")
+    return table.concat(srcs, " ")
   end,
   text = function(e)
-    return e.value:gsub("^%s+", ""):gsub("%s+$", "")
+    return e.value
   end,
   ordinal = function(e)
     return e.text
@@ -54,10 +50,14 @@ M.tag_attrs = {
 
 M.line_attrs = {
   value = function(e)
-    return rgutil.decode(e._message.data.lines):gsub("[\r\n]+$", "")
+    local srcs = {}
+    for _, m in ipairs(e._event.matches) do
+      table.insert(srcs, m.src)
+    end
+    return table.concat(srcs, " ")
   end,
   text = function(e)
-    return e.value:gsub("^%s+", ""):gsub("%s+$", "")
+    return e.value
   end,
   ordinal = function(e)
     return e.text

@@ -18,13 +18,9 @@ local makecmd = require("microkasten.telescope.common.makecmd")
 local commonattrs = require("microkasten.telescope.common.attrs")
 
 local rgattrs = require("microkasten.telescope.common.rg.attrs")
+local rgjob = require("microkasten.telescope.common.rg.job")
 local rgutil = require("microkasten.telescope.common.rg.util")
 local rgdispsegs = require("microkasten.telescope.common.rg.dispsegs")
-
-
-local JsonPipe = tsmisc.NullPipe:extend()
-
-function JsonPipe:new() end
 
 local function get_exe(opts)
   local vimgrep_args = opts.vimgrep_arguments or tsconfig.vimgrep_arguments
@@ -85,38 +81,27 @@ end
 
 local function make_entry_maker(opts, attrs)
   opts = opts and vim.deepcopy(opts) or {}
-
-  local filename = nil
-  return function(msg)
-    msg = vim.fn.json_decode(msg)
-    if not msg then
-      return nil
-    end
-
-    if msg.type == "begin" then
-      filename = msg.data.path.text or base64.decode(msg.data.path.bytes)
-    elseif msg.type == "match" then
-      assert(filename, "this should be impossible. (corrupt stdout?)")
-      msg.data.path.text = filename
-      local entry = { cwd = opts.cwd, _message = msg }
-      return commonattrs.set_attrs(entry, attrs)
-    elseif msg.type == "end" then
-      filename = nil
-    end
-
-    return nil
+  return function(ev)
+    local entry = { cwd = opts.cwd, _event = ev }
+    return commonattrs.set_attrs(entry, attrs)
   end
 end
 
 local function make_finder(opts, attrs)
-  return tsfinders.new_job(function(prompt)
+  opts = opts and vim.deepcopy(opts) or {}
+  opts.batch = rgjob.frequency.file
+
+  opts.command_generator = function(prompt)
     ---@diagnostic disable-next-line: redefined-local
     local opts = opts and vim.deepcopy(opts) or {}
     opts.prompt = opts.prompt or prompt
     return make_cmd(opts)
-  end, make_entry_maker(opts, attrs), opts.max_results, opts.cwd)
-end
+  end
 
+  opts.entry_maker = make_entry_maker(opts, attrs)
+
+  return rgjob.async_job_finder(opts)
+end
 
 function M.open(opts, attrs)
   local previewer = nil

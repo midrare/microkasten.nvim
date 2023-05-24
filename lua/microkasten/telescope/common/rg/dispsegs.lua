@@ -67,40 +67,57 @@ function M.add_coordinate_segs(opts, segs, entry)
   end
 end
 
-local function segmented(src_text, matches, match_hl)
-  assert(src_text, "expected src text")
+---@param matches match[]
+---@param match_hl string?
+---@return seg[] segments
+local function to_segs(matches, match_hl)
+  match_hl = match_hl or "keyword"
+
+  local sentinel = 0
+  matches = vim.tbl_extend("force", {}, matches)
+  table.insert(matches, sentinel)
+
   local segs = {}
 
-  local last_stop = 1
-  for _, m in ipairs(matches) do
-    local m_start = 1 + m["start"]
-    local m_stop = 1 + m["end"]
+  local pos = nil
+  local src = nil
+  local lnum = nil
 
-    if last_stop < m_start then
-      local pre_text = strings.sub(src_text, last_stop, m_start - 1)
-      table.insert(segs, { text = pre_text, elidable = true })
+  for _, m in ipairs(matches) do
+    if pos and lnum and (m == sentinel or lnum ~= m.lnum) then
+      local post = strings.sub(src, pos):gsub("[\n\r]+", " ")
+      if post and #post > 0 then
+        table.insert(segs, { text = post, elidable = true })
+      end
     end
 
-    local m_text = strings.sub(src_text, m_start, m_stop - 1)
-    table.insert(
-      segs,
-      { text = m_text, elidable = false, hl = match_hl or "keyword" }
-    )
+    if m == sentinel then
+      break
+    elseif lnum ~= m.lnum then
+      pos = 1
+      lnum = m.lnum
+      src = m.src
+    end
 
-    last_stop = m_stop
-  end
+    if pos < m.start then
+      local pre = strings.sub(m.src, pos, m.start - 1):gsub("[\n\r]+", " ")
+      table.insert(segs, { text = pre, elidable = true })
+    end
 
-  if last_stop < strings.len(src_text) then
-    local post_text = strings.sub(src_text, last_stop)
-    table.insert(segs, { text = post_text, elidable = true })
+    if m.start <= m.stop then
+      local text = strings.sub(m.src, m.start, m.stop):gsub("[\n\r]+", " ")
+      table.insert(segs, { text = text, elidable = false, hl = match_hl })
+    end
+
+    pos = m.stop + 1
   end
 
   return segs
 end
 
 function M.add_matches_segs(opts, segs, entry)
-  if opts.disable_text ~= true and entry.text then
-    local match_segs = segmented(entry.text, entry._message.data.submatches)
+  if opts.disable_text ~= true then
+    local match_segs = to_segs(entry._event.matches)
 
     if opts.disable_elision ~= true then
       local req_width = arrays.sum(match_segs, function(seg)
