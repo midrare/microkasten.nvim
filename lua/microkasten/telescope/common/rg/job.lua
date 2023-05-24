@@ -5,6 +5,7 @@ local Object = require("plenary.class")
 
 local tsmisc = require("telescope._")
 local tsentry = require("telescope.make_entry")
+local tsfinders = require("telescope.finders")
 
 local base64 = require("microkasten.luamisc.base64")
 
@@ -39,7 +40,8 @@ local pack_varargs = table.pack
   or function(...)
     local a = {}
     for i = 1, select("#", ...) do
-      table.insert(a, select(i, ...))
+      local val = select(i, ...)
+      table.insert(a, val)
     end
     return a
   end
@@ -277,105 +279,69 @@ M.frequency = {
 }
 
 function M.async_job_finder(opts)
-  local entry_maker = opts.entry_maker or tsentry.gen_from_string(opts)
   opts = opts and vim.deepcopy(opts) or {}
   opts.batch = opts.batch or M.frequency.line
 
-  local fn_command = function(prompt)
-    local command_list = opts.command_generator(prompt)
-    if command_list == nil then
-      return nil
-    end
-
-    local command = table.remove(command_list, 1)
-
-    local res = {
-      command = command,
-      args = command_list,
-    }
-
-    return res
+  local emitter = nil
+  if opts.batch == M.frequency.file then
+    emitter = FileEmitter()
+  elseif opts.batch == M.frequency.line then
+    emitter = LineEmitter()
+  elseif opts.batch == M.frequency.match then
+    emitter = MatchEmitter()
   end
 
-  local job = nil
+  -- HACK monkey-patch for telescope to emit more than one entry per line
+  --    https://github.com/nvim-telescope/telescope.nvim/pull/2230
 
-  local callable = function(_, prompt, process_result, process_complete)
-    if job then
-      job:close(true)
+  local filename = nil
+  local entry_maker = opts.entry_maker
+  opts.entry_maker = function(line)
+    local msg = vim.fn.json_decode(line)
+    assert(msg, "expected json message")
+
+    if msg.type == "begin" then
+      filename = decode(msg.data.path)
+    elseif msg.type == "match" then
+      assert(filename, "this should be impossible. (corrupt stdout?)")
+      msg.data.path.text = filename
     end
 
-    local job_opts = fn_command(prompt)
-    if not job_opts then
-      return
-    end
+    emitter:process(msg)
 
-    local writer = nil
-    -- if job_opts.writer and Job.is_job(job_opts.writer) then
-    --   writer = job_opts.writer
-    if opts.writer then
-      error("async_job_finder.writer is not yet implemented")
-      writer = tsmisc.writer(opts.writer)
-    end
-
-    local stdout = tsmisc.LinesPipe()
-
-    job = tsmisc.spawn({
-      command = job_opts.command,
-      args = job_opts.args,
-      cwd = job_opts.cwd or opts.cwd,
-      env = job_opts.env or opts.env,
-      writer = writer,
-
-      stdout = stdout,
-    })
-
-    local emitter = nil
-    if opts.batch == M.frequency.file then
-      emitter = FileEmitter()
-    elseif opts.batch == M.frequency.line then
-      emitter = LineEmitter()
-    elseif opts.batch == M.frequency.match then
-      emitter = MatchEmitter()
-    end
-
-    assert(emitter, "need emitter set up")
-    local filename = nil
-    for line in stdout:iter(true) do
-      local msg = vim.fn.json_decode(line)
-      assert(msg, "expected json message")
-
-      if msg.type == "begin" then
-        filename = decode(msg.data.path)
-      elseif msg.type == "match" then
-        assert(filename, "this should be impossible. (corrupt stdout?)")
-        msg.data.path.text = filename
-      end
-
-      emitter:process(msg)
-
-      for _, ev in ipairs(emitter:events()) do
-        if process_result(entry_maker(ev)) then
-          return
-        end
-      end
-
-      if msg.type == "end" then
-        filename = nil
+    local entries = {}
+    for _, ev in ipairs(emitter:events()) do
+      local entry = entry_maker(ev)
+      if entry then
+        table.insert(entries, entry)
       end
     end
 
-    process_complete()
+    if msg.type == "end" then
+      filename = nil
+    end
+    return entries
   end
 
-  return setmetatable({
-    close = function()
-      if job then
-        job:close(true)
+  local job = tsfinders.new_async_job(opts)
+  local call = getmetatable(job).__call
+
+  getmetatable(job).__call = function(...)
+    local args = pack_varargs(...)
+    local process_result = args[3]
+
+    args[3] = function(entries)
+      local ret = nil
+      for _, entry in ipairs(entries) do
+        ret = process_result(entry) or ret
       end
-    end,
-  }, {
-    __call = callable,
-  })
+      return ret
+    end
+
+    return call(unpack_varargs(args))
+  end
+
+  return job
 end
 
 return M
