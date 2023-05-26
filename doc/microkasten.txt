@@ -74,8 +74,10 @@ SUGGESTED STARTER CONFIG                                   *microkasten.starter*
         ---@type boolean false to disable
         syntax = true,
 
-        ---@type fun() function to run
+        ---@type nil | fun() function to run
         f = function()
+          local microkasten = require("microkasten")
+
           -- create
           vim.keymap.set('n', '<leader>rn',
             microkasten.create, { buffer = 0 }),
@@ -109,7 +111,7 @@ SUGGESTED STARTER CONFIG                                   *microkasten.starter*
           -- yank uid of current file
           vim.keymap.set('n', '<leader>yu', function()
             local reg = vim.api.nvim_get_vvar('register')
-            local uid = microkasten.get_current_uid()
+            local uid = require("microkasten").get_current_uid()
             vim.fn.setreg(reg, uid)
           end, { buffer = 0 }),
         end,
