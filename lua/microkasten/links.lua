@@ -43,12 +43,6 @@ function M.parse_link(link)
   return { uid = uid, title = title, prefix = prefix }
 end
 
----@param note noteinfo note targeted by link
----@return string|string[] pat regex matching link that targets note
-function M.generate_incoming_link_regex(note)
-  return "\\[\\[[^\\n]*" .. note.uid .. "[^\\n]*\\]\\]"
-end
-
 ---@param line string line of note text maybe containing a link
 ---@param pos integer char index at which link should be under
 ---@return string? link nil if there is no link in the line under the given pos

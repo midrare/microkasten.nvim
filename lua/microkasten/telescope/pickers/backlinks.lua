@@ -1,6 +1,6 @@
 local M = {}
 
-local links = require("microkasten.links")
+local syntax = require("microkasten.syntax")
 local tags = require("microkasten.tags")
 
 local dispsegs = require("microkasten.telescope.common.dispsegs")
@@ -13,7 +13,7 @@ function M.open(opts)
   assert(opts.uid, "expected uid to be provided")
 
   opts.prompt =
-    vim.tbl_flatten({ links.generate_incoming_link_regex({ uid = opts.uid }) })
+    vim.tbl_flatten({ syntax.links_regex({ uid = opts.uid }) })
 
   local attrs = vim.tbl_deep_extend("force", {
     display = function(e)
