@@ -3,6 +3,7 @@ local M = {}
 local arrays = require("microkasten.luamisc.arrays")
 local files = require("microkasten.luamisc.files")
 local paths = require("microkasten.luamisc.paths")
+local strings = require("microkasten.luamisc.strings")
 local tables = require("microkasten.luamisc.tables")
 
 local formats = require("microkasten.formats")
@@ -259,15 +260,18 @@ function M.rename(filename, title)
     return
   end
 
-  local info = filenames.parse_filename(filename)
   if not title or #title <= 0 then
     vim.ui.input({ prompt = "Rename note: ", default = "" }, function(s)
-      title = s
+      if not s or #s < 0 or s:match("^%s*$") then
+        return
+      end
+      M.rename(filename, s)
     end)
+    return
   end
 
-  title = (title and title:gsub("^%s*", ""):gsub("%s*$", ""):gsub("[\\/]+", ""))
-    or nil
+  local info = filenames.parse_filename(filename)
+  title = strings.strip(title):gsub("[\\/]+", "")
   if not title or #title <= 0 or title == info.title then
     return
   end
@@ -275,6 +279,8 @@ function M.rename(filename, title)
   info.title = title
 
   local new_filename = filenames.generate_filename(info)
+  new_filename = paths.abspath(new_filename,
+    paths.dirname(filename) or vim.loop.cwd())
 
   vim.fn.mkdir(paths.dirname(new_filename), "p")
   ---@diagnostic disable-next-line: param-type-mismatch
