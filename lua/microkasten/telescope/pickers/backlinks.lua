@@ -1,7 +1,6 @@
 local M = {}
 
 local syntax = require("microkasten.syntax")
-local tags = require("microkasten.tags")
 
 local dispsegs = require("microkasten.telescope.common.dispsegs")
 local rg = require("microkasten.telescope.common.rg")
