@@ -2,7 +2,7 @@ local M = {}
 
 local paths = require("microkasten.luamisc.paths")
 
-local filenames = require("microkasten.filenames")
+local metadata = require("microkasten.metadata")
 
 
 M.filename_attrs = {
@@ -25,7 +25,7 @@ M.filename_attrs = {
     return e._note.title
   end,
   _note = function(e)
-    return filenames.parse_filename(e.filename)
+    return metadata.parse_filename(e.filename)
   end,
 }
 

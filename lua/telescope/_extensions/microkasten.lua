@@ -1,4 +1,4 @@
-local filenames = require("microkasten.filenames")
+local metadata = require("microkasten.metadata")
 local pickers = require("microkasten.telescope")
 
 local default_opts = {}
@@ -21,7 +21,7 @@ local function pick_backlink(opts)
   opts.cwd = opts.cwd or vim.fn.getcwd(-1, -1)
   if not opts.uid then
     local filename = opts.filename or vim.fn.expand("%:t")
-    local note = filenames.parse_filename(filename)
+    local note = metadata.parse_filename(filename)
     opts.uid = note and note.uid or nil
   end
   if opts.uid and #opts.uid > 0 then

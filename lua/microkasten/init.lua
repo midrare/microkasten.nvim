@@ -9,7 +9,7 @@ local tables = require("microkasten.luamisc.tables")
 local formats = require("microkasten.formats")
 local filesystem = require("microkasten.filesystem")
 local links = require("microkasten.links")
-local filenames = require("microkasten.filenames")
+local metadata = require("microkasten.metadata")
 local syntax = require("microkasten.syntax")
 local useropts = require("microkasten.useropts")
 local util = require("microkasten.util")
@@ -194,7 +194,7 @@ function M.parse_filename(filename)
     return nil
   end
 
-  return filenames.parse_filename(filename)
+  return metadata.parse_filename(filename)
 end
 
 function M.parse_uid(filename)
@@ -232,7 +232,7 @@ function M.create(dir, title, ext)
   end
 
   local info = { uid = formats.generate_uid(), title = title, ext = ext }
-  local basename = filenames.generate_filename(info)
+  local basename = metadata.generate_filename(info)
   local filename = dir .. paths.sep() .. basename
   local content = formats.generate_note(info)
 
@@ -270,7 +270,7 @@ function M.rename(filename, title)
     return
   end
 
-  local info = filenames.parse_filename(filename)
+  local info = metadata.parse_filename(filename)
   title = strings.strip(title):gsub("[\\/]+", "")
   if not title or #title <= 0 or title == info.title then
     return
@@ -278,7 +278,7 @@ function M.rename(filename, title)
 
   info.title = title
 
-  local new_filename = filenames.generate_filename(info)
+  local new_filename = metadata.generate_filename(info)
   new_filename = paths.abspath(new_filename,
     paths.dirname(filename) or vim.loop.cwd())
 
