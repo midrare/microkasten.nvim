@@ -31,9 +31,12 @@ function M.tags_regex()
   }
 end
 
----@param note noteinfo note targeted by link
+---@param note? noteinfo note targeted by link
 ---@return string|string[] pat regex matching link that targets note
 function M.links_regex(note)
+  if not note or not note.uid then
+    return "\\[\\[[^\\[\\]\\n]+\\]\\]"
+  end
   return "\\[\\[[^\\n]*" .. note.uid .. "[^\\n]*\\]\\]"
 end
 
