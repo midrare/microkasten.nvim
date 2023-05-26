@@ -44,7 +44,7 @@ function M.links_luapat(note)
     return "%[%[.+%]%]"
   end
 
-  return "%[%[[^%[%]]*" .. note.uid .. "[^%[%]]*%]%]"
+  return "%[%[[^%[%]\n]*" .. note.uid .. "[^%[%]\n]*%]%]"
 end
 
 return M
