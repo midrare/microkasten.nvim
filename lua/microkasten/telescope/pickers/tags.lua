@@ -1,7 +1,7 @@
 local M = {}
 
 local links = require("microkasten.links")
-local tags = require("microkasten.tags")
+local syntax = require("microkasten.syntax")
 
 local dispsegs = require("microkasten.telescope.common.dispsegs")
 local rg = require("microkasten.telescope.common.rg")
@@ -19,7 +19,7 @@ end
 function M.open(opts)
   opts = opts and vim.deepcopy(opts) or {}
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
-  opts.prompt = vim.tbl_flatten({ tags.generate_tags_regex() })
+  opts.prompt = vim.tbl_flatten({ syntax.generate_tags_regex() })
 
   local attrs = vim.tbl_deep_extend("force", {
     display = function(e)
