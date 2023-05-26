@@ -54,8 +54,16 @@ M.generate_filename = nil
 ---@type fun()?
 M.apply_syntax = nil
 
---- returns a set of regex patterns that matches tags of all forms
----@type (fun(): string|string[])?
-M.generate_tags_regex = nil
+--- a set of regex patterns that matches tags
+---@type (fun(string?): string|string[])?
+M.tags_regex = nil
+
+--- a set of regex patterns that matches links
+---@type (fun(string?): string|string[])?
+M.links_regex = nil
+
+--- a set of lua patterns that matches links
+---@type (fun(string?): string|string[])?
+M.links_luapat = nil
 
 return M

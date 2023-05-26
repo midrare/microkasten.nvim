@@ -34,15 +34,24 @@ end
 ---@param note? noteinfo note targeted by link
 ---@return string|string[] pat regex matching link that targets note
 function M.links_regex(note)
+  if useropts.links_regex then
+    return useropts.links_regex(note)
+  end
+
   if not note or not note.uid then
     return "\\[\\[[^\\[\\]\\n]+\\]\\]"
   end
-  return "\\[\\[[^\\n]*" .. note.uid .. "[^\\n]*\\]\\]"
+
+  return "\\[\\[[^\\[\\]\\n]*" .. note.uid .. "[^\\[\\]\\n]*\\]\\]"
 end
 
 ---@param note? noteinfo note targeted by link
 ---@return string|string[] pat lua pattern matching link
 function M.links_luapat(note)
+  if useropts.links_luapat then
+    return useropts.links_luapat(note)
+  end
+
   if not note or not note.uid then
     return "%[%[.+%]%]"
   end
