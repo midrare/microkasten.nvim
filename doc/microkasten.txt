@@ -1,0 +1,152 @@
+*microkasten.txt*       a configurable zettelkasten tool
+
+==============================================================================
+                                                              *microkasten.nvim*
+
+microkasten.nvim lets you traverse text files as a Zettelkasten: a network
+of linked notes that correspond to trails of thoughts.
+
+microkasten follows the "everything is customizable" philosophy. This lets
+you to adapt microkasten to fit your own workflows, and lets you
+migrate to and from microkasten without renaming/rewriting all your notes
+to be compatible with the idiosyncratic conventions of the tool.
+
+microkasten also follows the "pick and choose" philosophy. Features don't
+depend on each other. If you don't like the way a default feature does
+something, you can substitute your own without breaking things that expect
+the ignored feature to be active.
+
+microkasten takes the path of least intrusiveness. microkasten does not
+hijack existing file types; it does not register its own custom `filetype`
+or reassign files to that `filetype`.
+
+
+==============================================================================
+SETUP                                                      *microkasten.setup()*
+
+                                                      *microkasten.requirements*
+
+microkasten is written in a platform-agnostic way. Although Windows is the
+only platform tested, although there's no reason that microkasten shouldn't
+work on others.
+
+microkasten expects the command-line tools `rg` and `fd` to be in your `$PATH`.
+
+
+                                                     *microkasten.configuration*
+microkasten.setup({opts})
+
+    Usage:
+>lua
+    require("microkasten").setup({opts})
+<
+
+`setup()` can be safely called more than once. This allows you to
+have different settings per-folder.
+
+
+------------------------------------------------------------------------------
+SUGGESTED STARTER CONFIG                                   *microkasten.starter*
+
+>lua
+    -- default settings
+    require("microkasten").setup({
+      telescope = {
+        mappings = {
+        }
+      },
+
+      ---@type boolean | fun()
+      syntax = true,
+
+      --- activates microkasten features on a per-buffer basis
+      ---@type boolean | table false to disable completely
+      autoattach = {
+        --- marker file must be found in current or parent dir(s)
+        ---@type boolean | string | string[] false to disable
+        marker = ".microkasten",
+
+        --- buffer must match one of the file extensions
+        ---@type boolean | string | string[]
+        exts = {".md", ".norg"},
+
+        --- apply default syntax highlighting
+        ---@type boolean false to disable
+        syntax = true,
+
+        ---@type fun() function to run
+        f = function()
+          -- create
+          vim.keymap.set('n', '<leader>rn',
+            microkasten.create, { buffer = 0 }),
+
+          -- rename
+          vim.keymap.set('n', '<leader>rr',
+            microkasten.rename, { buffer = 0 }),
+
+          -- open link under cursor
+          vim.keymap.set('n', 'gf',
+            microkasten.open_link_at, { buffer = 0 }),
+          vim.keymap.set('n', 'gF',
+            microkasten.open_link_at, { buffer = 0 }),
+
+          -- filename grep
+          vim.keymap.set('n', '<leader>g',
+            microkasten.filename_picker, { buffer = 0 }),
+
+          -- file content grep
+          vim.keymap.set('n', '<leader>G',
+            microkasten.grep_picker, { buffer = 0 }),
+
+          -- tag picker
+          vim.keymap.set('n', '<leader>j',
+            microkasten.tag_picker, { buffer = 0 }),
+
+          -- show backlinks
+          vim.keymap.set('n', '<leader>v',
+            microkasten.backlink_picker, { buffer = 0 }),
+
+          -- yank uid of current file
+          vim.keymap.set('n', '<leader>yu', function()
+            local reg = vim.api.nvim_get_vvar('register')
+            local uid = microkasten.get_current_uid()
+            vim.fn.setreg(reg, uid)
+          end, { buffer = 0 }),
+        end,
+      },
+    })
+
+
+==============================================================================
+USAGE                                                        *microkasten.usage*
+
+By default, microkasten `.md` and `.norg`. (If you use `norg`, be
+sure to register the `.norg` extension in plenary to get syntax highlighting
+in telescope. See: https://github.com/nvim-lua/plenary.nvim#plenaryfiletype)
+
+
+==============================================================================
+ADVANCED CONFIGURATION                                    *microkasten.advanced*
+
+
+------------------------------------------------------------------------------
+TELESCOPE                                                *microkasten.telescope*
+
+Any telescope mappings should be set through `telescope.setup()`. See
+|telescope.mappings| for more.
+
+>lua
+    require("telescope").setup({
+        pickers = {
+            microkasten = {
+                mappings = {
+                    n = {
+                        ["<c-i>"] = "put_uid"
+                    }
+                }
+            }
+        }
+    })
+<
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
