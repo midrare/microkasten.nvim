@@ -1,5 +1,6 @@
 local M = {}
 
+local syntax = require("microkasten.syntax")
 local useropts = require("microkasten.useropts")
 
 local function get_pattern_at(pat, s, idx)
@@ -51,7 +52,7 @@ function M.get_link_from_line(line, pos)
     return useropts.get_link_from_line(line, pos)
   end
 
-  return get_pattern_at("%[%[..*%]%]", line, pos)
+  return get_pattern_at(syntax.links_luapat(), line, pos)
 end
 
 ---@param pos? cursor cursor pos

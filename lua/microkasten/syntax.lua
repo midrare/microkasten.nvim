@@ -37,4 +37,14 @@ function M.links_regex(note)
   return "\\[\\[[^\\n]*" .. note.uid .. "[^\\n]*\\]\\]"
 end
 
+---@param note? noteinfo note targeted by link
+---@return string|string[] pat lua pattern matching link
+function M.links_luapat(note)
+  if not note or not note.uid then
+    return "%[%[.+%]%]"
+  end
+
+  return "%[%[[^%[%]]*" .. note.uid .. "[^%[%]]*%]%]"
+end
+
 return M
