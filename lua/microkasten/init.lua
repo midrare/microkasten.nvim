@@ -135,9 +135,7 @@ end
 ---@param uid string uid of target note
 ---@param pick_win? boolean false to disable window picker
 function M.open_uid(dir, uid, pick_win)
-  if pick_win == nil then
-    pick_win = true
-  end
+  pick_win = pick_win ~= false
   dir = dir or vim.loop.cwd()
   if not dir then
     return
@@ -153,10 +151,7 @@ end
 ---@param link notelink link to target note
 ---@param pick_win? boolean false to disable window picker
 function M.open_link(dir, link, pick_win)
-  if pick_win == nil then
-    pick_win = true
-  end
-
+  pick_win = pick_win ~= false
   if not link or not link.uid or #link.uid <= 0 then
     return
   end
@@ -176,10 +171,7 @@ end
 ---@param pos? cursor cursor pos
 ---@param pick_win? boolean false to disable window picker
 function M.open_link_at(pos, pick_win)
-  if pick_win == nil then
-    pick_win = true
-  end
-
+  pick_win = pick_win ~= false
   local link = M.parse_link_at(pos)
   if not link then
     return
