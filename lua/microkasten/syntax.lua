@@ -15,7 +15,7 @@ function M.apply_syntax()
 end
 
 ---@return string|string[] pat regex pattern to match tags
-function M.generate_tags_regex()
+function M.tags_regex()
   if useropts.generate_tags_regex then
     return useropts.generate_tags_regex()
   end
