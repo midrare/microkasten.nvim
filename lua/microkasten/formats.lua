@@ -8,7 +8,7 @@ local useropts = require("microkasten.useropts")
 
 local function clean_tags(tags)
   local cleaned = {}
-  for _, tag in ipairs(tags) do
+  for _, tag in ipairs(tags or {}) do
     tag = tag:gsub("^#", "")
     tag = tag:gsub("[^a-zA-Z0-9_%-%.]", "")
     if tag and #tag > 0 and not tag:match("^%s*$") then
