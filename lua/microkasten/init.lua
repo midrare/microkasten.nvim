@@ -212,7 +212,7 @@ end
 ---@param ext? string file extension for new note or default from config
 function M.create(dir, title, ext)
   dir = dir or vim.fn.getcwd(-1, -1)
-  dir = dir:gsub("[\\/]+", "")
+  dir = dir:gsub("[\\/]+", paths.sep())
   title = (title and title:gsub("^%s*", ""):gsub("%s*$", "")) or nil
 
   vim.ui.input({ prompt = "Note title: ", default = "" }, function(s)
