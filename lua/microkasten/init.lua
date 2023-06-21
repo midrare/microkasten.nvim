@@ -210,7 +210,8 @@ end
 ---@param dir? string folder to put new note in or default for cwd
 ---@param title? string title of new note or default to prompt user
 ---@param ext? string file extension for new note or default from config
-function M.create(dir, title, ext)
+---@param force? boolean true to overwrite existing file
+function M.create(dir, title, ext, force)
   dir = dir or vim.fn.getcwd(-1, -1)
   dir = dir:gsub("[\\/]+", paths.sep())
   title = (title and title:gsub("^%s*", ""):gsub("%s*$", "")) or nil
@@ -235,6 +236,10 @@ function M.create(dir, title, ext)
   local basename = metadata.generate_filename(info)
   local filename = dir .. paths.sep() .. basename
   local content = formats.generate_note(info)
+
+  if not force and vim.fn.filereadable(filename) >= 1 then
+    return
+  end
 
   files.makedirs(dir)
   if content and #content > 0 then
