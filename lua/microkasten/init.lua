@@ -215,35 +215,35 @@ function M.create(dir, title, ext)
   dir = dir:gsub("[\\/]+", paths.sep())
   title = (title and title:gsub("^%s*", ""):gsub("%s*$", "")) or nil
 
-  vim.ui.input({ prompt = "Note title: ", default = "" }, function(s)
-    title = (s and s:gsub("^%s*", ""):gsub("%s*$", "")) or nil
-    if not title then
-      return
-    end
+  if not title then
+    vim.ui.input({ prompt = "Note title: ", default = "" }, function(s)
+      title = (s and s:gsub("^%s*", ""):gsub("%s*$", "")) or nil
+      if not title or #title <= 0 then
+        return
+      end
+      M.create(dir, title, ext)
+    end)
+    return
+  end
 
-    if #title <= 0 then
-      title = nil
-    end
+  ext = paths.canonical_ext(ext) or formats.default_ext()
+  if #ext <= 0 then
+    ext = nil
+  end
 
-    ext = paths.canonical_ext(ext) or formats.default_ext()
-    if #ext <= 0 then
-      ext = nil
-    end
+  local info = { uid = formats.generate_uid(), title = title, ext = ext }
+  local basename = metadata.generate_filename(info)
+  local filename = dir .. paths.sep() .. basename
+  local content = formats.generate_note(info)
 
-    local info = { uid = formats.generate_uid(), title = title, ext = ext }
-    local basename = metadata.generate_filename(info)
-    local filename = dir .. paths.sep() .. basename
-    local content = formats.generate_note(info)
+  files.makedirs(dir)
+  if content and #content > 0 then
+    files.write_file(filename, content)
+  end
 
-    files.makedirs(dir)
-    if content and #content > 0 then
-      files.write_file(filename, content)
-    end
-
-    vim.cmd(
-      "silent! edit! " .. vim.fn.escape(filename, " ") .. " | silent! write"
-    )
-  end)
+  vim.cmd(
+    "silent! edit! " .. vim.fn.escape(filename, " ") .. " | silent! write"
+  )
 end
 
 ---@param filename? string file to rename or default is current file
