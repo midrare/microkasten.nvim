@@ -44,6 +44,9 @@ function M._run_hook(hook)
 end
 
 function M._on_attach()
+  -- always apply syntax
+  syntax.apply_syntax()
+
   if vim.b._microkasten_attached then
     return
   end
@@ -69,7 +72,6 @@ function M._on_attach()
   end
 
   vim.b._microkasten_attached = true
-  syntax.apply_syntax()
   M._run_hook(useropts.on_attach)
 end
 
