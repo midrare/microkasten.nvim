@@ -44,13 +44,6 @@ function M._run_hook(hook)
 end
 
 function M._on_attach()
-  -- always apply syntax
-  syntax.apply_syntax()
-
-  if vim.b._microkasten_attached then
-    return
-  end
-
   local ext = vim.fn.expand("%:e"):lower()
   if ext and #ext > 0 then
     local pats = formats.exts()
@@ -71,7 +64,7 @@ function M._on_attach()
     end
   end
 
-  vim.b._microkasten_attached = true
+  syntax.apply_syntax()
   M._run_hook(useropts.on_attach)
 end
 
