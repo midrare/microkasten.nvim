@@ -53,10 +53,10 @@ function M.links_luapat(note)
   end
 
   if not note or not note.uid then
-    return "%[%[.+%]%]"
+    return "%[%[..-%]%]"
   end
 
-  return "%[%[[^%[%]\n]*" .. note.uid .. "[^%[%]\n]*%]%]"
+  return "%[%[[^%[%]\n]-" .. note.uid .. "[^%[%]\n]-%]%]"
 end
 
 return M
