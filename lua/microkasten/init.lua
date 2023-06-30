@@ -69,7 +69,7 @@ function M._on_attach()
 end
 
 local function init_autocmds()
-  vim.cmd("augroup microkasten_syntax")
+  vim.cmd("augroup microkasten")
   vim.cmd("autocmd!")
 
   vim.cmd [[
@@ -88,7 +88,7 @@ function M.setup(opts)
   tables.overwrite({}, useropts)
   tables.merge(opts, useropts)
 
-  init_autocmds() -- TODO: make autocmds configurable
+  init_autocmds()
 end
 
 function M.tag_picker(opts)
