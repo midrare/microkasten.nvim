@@ -2,38 +2,29 @@ local M = {}
 
 local paths = require("microkasten.luamisc.paths")
 
-function M.rename_bufs(src_fn, target_fn, cwd)
-  local note_bufnr = vim.fn.bufnr(src_fn)
-  if note_bufnr >= 0 then
-    vim.api.nvim_buf_set_name(note_bufnr, target_fn)
+function M.rename_bufs(p1, p2)
+  if not p2 or #p2 <= 0 then
+    return
   end
 
-  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    local buffn = vim.api.nvim_buf_get_name(bufnr)
-    if buffn then
-      buffn = paths.canonical(buffn, cwd)
-      if buffn == src_fn then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-        for _, winid in ipairs(vim.fn.win_findbuf(bufnr)) do
-          if note_bufnr < 0 then
-            note_bufnr = vim.api.nvim_create_buf(true, false)
-            vim.api.nvim_buf_set_name(note_bufnr, target_fn)
-          end
-          vim.api.nvim_win_set_buf(winid, note_bufnr)
-        end
-      end
-    end
-  end
+  local bufnr1 = vim.fn.bufnr(p1)
+  local bufnr2 = vim.fn.bufnr(p1:gsub("[\\/]+", "/"))
+  local bufnr3 = vim.fn.bufnr(p1:gsub("[\\/]+", "\\"))
 
-  if note_bufnr >= 0 then
-    local orig_winid = vim.fn.win_getid()
-    if orig_winid >= 0 then
-      for _, winid in ipairs(vim.fn.win_findbuf(note_bufnr)) do
+  local old_winid = vim.fn.win_getid()
+
+  for _, bufnr in ipairs({bufnr1, bufnr2, bufnr3}) do
+    if bufnr >= 0 then
+      vim.api.nvim_buf_set_name(bufnr, p2)
+      for _, winid in ipairs(vim.fn.win_findbuf(bufnr)) do
         vim.api.nvim_set_current_win(winid)
-        vim.cmd("silent! write!")
+        vim.cmd("silent! edit")
       end
-      vim.api.nvim_set_current_win(orig_winid)
     end
+  end
+
+  if old_winid >= 0 then
+    vim.api.nvim_set_current_win(old_winid)
   end
 end
 
