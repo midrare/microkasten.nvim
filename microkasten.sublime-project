@@ -19,7 +19,19 @@
                 "*.temp",
                 ".root",
                 "*~",
-            ]
+            ],
         }
-    ]
+    ],
+    "settings":
+    {
+		"LSP":
+		{
+			"LSP-lua":
+			{
+				"settings":
+				{
+				}
+			}
+		}
+	},
 }
