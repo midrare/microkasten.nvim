@@ -63,7 +63,9 @@ local function make_finder(opts, attrs)
       return nil
     end
     return make_cmd(opts)
-  end, make_entry_maker(opts, attrs), opts.max_results, opts.cwd)
+  end, opts.entry_maker or
+    (opts.make_entry_maker and opts.make_entry_maker(opts, attrs)) or
+    make_entry_maker(opts, attrs), opts.max_results, opts.cwd)
 end
 
 function M.open(opts, attrs)

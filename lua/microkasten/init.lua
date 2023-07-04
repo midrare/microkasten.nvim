@@ -285,6 +285,7 @@ function M.rename(filename, title)
   vim.fn.mkdir(paths.dirname(new_filename), "p")
   ---@diagnostic disable-next-line: param-type-mismatch
   vim.fn.rename(filename, new_filename)
+  util.rename_bufs(filename, new_filename)
 end
 
 ---@return string uid generated uid
