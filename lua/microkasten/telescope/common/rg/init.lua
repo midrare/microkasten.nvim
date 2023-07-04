@@ -74,6 +74,7 @@ local function make_cmd(opts)
     cmd,
     "--color=never",
     "--json",
+    "--pcre2",
     "--",
     search_paths,
   })
@@ -97,7 +98,9 @@ local function make_finder(opts, attrs)
     return make_cmd(opts)
   end
 
-  opts.entry_maker = make_entry_maker(opts, attrs)
+  opts.entry_maker = opts.entry_maker or
+    (opts.make_entry_maker and opts.make_entry_maker(opts, attrs)) or
+    make_entry_maker(opts, attrs)
 
   return rgjob.async_job_finder(opts)
 end
