@@ -12,6 +12,12 @@ function M.open(opts)
   opts = opts and vim.deepcopy(opts) or {}
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
 
+  opts.disable_title = opts.disable_title ~= false
+  opts.disable_coordinates = opts.disable_coordinates ~= false
+  opts.disable_filename = opts.disable_filename ~= false
+  opts.disable_uid = opts.disable_uid ~= false
+  opts.disable_text = opts.disable_text == true
+
   local attrs = vim.tbl_deep_extend("force", {
     display = function(e)
       local segs = {}

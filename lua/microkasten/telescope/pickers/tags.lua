@@ -55,6 +55,12 @@ function M.open(opts)
   opts.make_entry_maker = make_entry_maker
   opts.batch = rgjob.frequency.match
 
+  opts.disable_title = opts.disable_title ~= false
+  opts.disable_coordinates = opts.disable_coordinates ~= false
+  opts.disable_filename = opts.disable_filename ~= false
+  opts.disable_uid = opts.disable_uid ~= false
+  opts.disable_text = opts.disable_text ~= false
+
   local attrs = vim.tbl_deep_extend("force", {
     display = function(e)
       local segs = {}

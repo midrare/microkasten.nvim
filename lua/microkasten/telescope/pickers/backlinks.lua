@@ -13,6 +13,11 @@ function M.open(opts)
 
   opts.prompt =
     vim.tbl_flatten({ syntax.links_regex({ uid = opts.uid }) })
+  opts.disable_title = opts.disable_title == true
+  opts.disable_coordinates = opts.disable_coordinates ~= false
+  opts.disable_filename = opts.disable_filename ~= false
+  opts.disable_uid = opts.disable_uid ~= false
+  opts.disable_text = opts.disable_text ~= false
 
   local attrs = vim.tbl_deep_extend("force", {
     display = function(e)

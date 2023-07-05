@@ -20,7 +20,7 @@ function M.add_fileicon_segs(opts, segs, entry)
 end
 
 function M.add_uid_segs(opts, segs, entry)
-  if opts.disable_uid == false then
+  if opts.disable_uid ~= true then
     if #segs > 0 then
       table.insert(segs, { text = " " })
     end
@@ -29,7 +29,7 @@ function M.add_uid_segs(opts, segs, entry)
 end
 
 function M.add_title_segs(opts, segs, entry)
-  if opts.disable_title == false then
+  if opts.disable_title ~= true then
     if #segs > 0 then
       table.insert(segs, { text = " " })
     end
@@ -38,7 +38,7 @@ function M.add_title_segs(opts, segs, entry)
 end
 
 function M.add_filename_segs(opts, segs, entry)
-  if opts.disable_filename == false then
+  if opts.disable_filename ~= true then
     if #segs > 0 then
       table.insert(segs, { text = " " })
     end
@@ -48,7 +48,7 @@ function M.add_filename_segs(opts, segs, entry)
 end
 
 function M.add_coordinate_segs(opts, segs, entry)
-  if opts.disable_coordinates == false and entry.lnum then
+  if opts.disable_coordinates ~= true and entry.lnum then
     if #segs > 0 then
       table.insert(segs, { text = " " })
     end
