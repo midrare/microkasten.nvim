@@ -45,13 +45,13 @@ function M.yank_path(prompt_bufnr)
   vim.fn.setreg(reg, entry.filename)
 end
 
-function M.open_file(prompt_bufnr)
+function M.open_file(prompt_bufnr, pick_win)
   ---@diagnostic disable-next-line: unused-local
   local picker = tsstate.get_current_picker(prompt_bufnr)
   local entry = tsstate.get_selected_entry()
   tsactions.close(prompt_bufnr)
   if entry.filename and #entry.filename > 0 then
-    if winpicker_ok and winpicker then
+    if pick_win and winpicker_ok and winpicker then
       local winnr = winpicker.pick_window({
         include_current_win = true,
         selection_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
