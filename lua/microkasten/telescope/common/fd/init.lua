@@ -22,6 +22,10 @@ local function make_cmd(opts)
   opts = opts and vim.deepcopy(opts) or {}
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
 
+  if not opts.prompt or #opts.prompt <= 0 then
+    return nil
+  end
+
   local cmd = { "fd", opts.additional_args }
 
   makecmd.add_flag(cmd, "--hidden", opts.hidden == true)
@@ -59,9 +63,6 @@ local function make_finder(opts, attrs)
     ---@diagnostic disable-next-line: redefined-local
     local opts = opts and vim.deepcopy(opts) or {}
     opts.prompt = opts.prompt or prompt
-    if not opts.prompt or #opts.prompt <= 0 then
-      return nil
-    end
     return make_cmd(opts)
   end, opts.entry_maker or
     (opts.make_entry_maker and opts.make_entry_maker(opts, attrs)) or

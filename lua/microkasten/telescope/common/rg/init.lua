@@ -46,6 +46,10 @@ local function make_cmd(opts)
   opts = (opts and vim.tbl_deep_extend("force", {}, opts)) or {}
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
 
+  if not opts.prompt or #opts.prompt <= 0 then
+    return nil
+  end
+
   local cmd = { get_exe(opts) or "rg" }
   vim.list_extend(cmd, vim.tbl_flatten({ opts.additional_args }))
 
