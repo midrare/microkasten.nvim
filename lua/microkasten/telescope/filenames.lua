@@ -16,12 +16,17 @@ function M.open(opts)
   opts.fuzzy = opts.fuzzy or false
   opts.cmd = opts.cmd or makecmd.make_fd_cmd(opts)
 
-  local finder = tsfinders.new_job(function(prompt)
-    ---@diagnostic disable-next-line: redefined-local
-    local opts = vim.tbl_deep_extend("force", {}, opts or {})
-    opts.prompt = prompt
-    return makecmd.make_fd_cmd(opts)
-  end, opts.entry_maker or entrymaker.filename_entry_maker(opts), opts.max_results, opts.cwd)
+  local finder = tsfinders.new_job(
+    function(prompt)
+      ---@diagnostic disable-next-line: redefined-local
+      local opts = vim.tbl_deep_extend("force", {}, opts or {})
+      opts.prompt = prompt
+      return makecmd.make_fd_cmd(opts)
+    end,
+    opts.entry_maker or entrymaker.filename_entry_maker(opts),
+    opts.max_results,
+    opts.cwd
+  )
 
   tspickers
     .new(opts, {

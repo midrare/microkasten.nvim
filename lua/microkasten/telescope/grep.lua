@@ -25,15 +25,20 @@ function M.open(opts)
     opts.disable_coordinates = true
   end
 
-  local finder = tsfinders.new_job(function(prompt)
-    ---@diagnostic disable-next-line: redefined-local
-    local opts = vim.tbl_deep_extend("force", {}, opts or {})
-    opts.prompt = prompt
-    if not opts.prompt or #opts.prompt <= 0 then
-      return nil
-    end
-    return makecmd.make_grep_cmd(opts)
-  end, opts.entry_maker or entrymaker.grep_entry_maker(opts), opts.max_results, opts.cwd)
+  local finder = tsfinders.new_job(
+    function(prompt)
+      ---@diagnostic disable-next-line: redefined-local
+      local opts = vim.tbl_deep_extend("force", {}, opts or {})
+      opts.prompt = prompt
+      if not opts.prompt or #opts.prompt <= 0 then
+        return nil
+      end
+      return makecmd.make_grep_cmd(opts)
+    end,
+    opts.entry_maker or entrymaker.grep_entry_maker(opts),
+    opts.max_results,
+    opts.cwd
+  )
 
   tspickers
     .new(opts, {

@@ -38,7 +38,7 @@ function M.make_grep_cmd(opts)
   if type(opts.additional_args) == "function" then
     arrays.extend(cmd, opts.additional_args(opts))
   elseif opts.additional_args then
-    arrays.extend(cmd, vim.tbl_flatten({opts.additional_args}))
+    arrays.extend(cmd, vim.tbl_flatten({ opts.additional_args }))
   end
 
   add_values(cmd, opts, "--type", opts.type_filter)

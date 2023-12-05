@@ -48,7 +48,8 @@ local function filename_attrs(opts)
     display = function(e)
       local segs = {}
 
-      local icon, icon_hl = tsutils.get_devicons(e.filename, opts.disable_devicons)
+      local icon, icon_hl =
+        tsutils.get_devicons(e.filename, opts.disable_devicons)
       if icon and icon_hl then
         table.insert(segs, { icon, icon_hl })
         table.insert(segs, { " ", nil })
@@ -72,7 +73,8 @@ local function grep_attrs(opts)
       local text = e.value
 
       ---@diagnostic disable-next-line: redefined-local
-      local start, stop, filename, lnum, col = text:find("^(.*):([0-9]+):([0-9]+):")
+      local start, stop, filename, lnum, col =
+        text:find("^(.*):([0-9]+):([0-9]+):")
       if not start or not stop then
         start, stop, lnum, col = text:find("^([0-9]+):([0-9]+):")
       end
